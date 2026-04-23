@@ -2928,7 +2928,7 @@ async function syncAllToDrive() {
     });
   });
 
-  // 미팅 기록이 있는 것만 동기화
+  // 미팅 기록이 있는 것만 동기화 
   const withData = targets.filter(t => (state.meetings[t.viewId] || []).length > 0);
   if (!withData.length) {
     showToast('☁️ 동기화할 미팅 기록이 없습니다.');
