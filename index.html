@@ -2103,7 +2103,8 @@ async function callClean(text) {
 - ${clientName} 참여자가 2명 이상이면 → [${clientName}-김철수 과장] 처럼 회사명 접두어 포함
 - 화자를 특정하기 어려우면 [세강스틸러스] 또는 [${clientName}] 으로 표시`;
 
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+  const resp = await fetch('https://meeting-proxy.kjhmaniya.workers.dev
+                         ', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -2262,7 +2263,7 @@ async function runSummarize(originalText, cleanedText) {
 }
 
 async function summarizeMeeting(transcript) {
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+  const resp = await fetch('https://meeting-proxy.kjhmaniya.workers.dev', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -2813,7 +2814,7 @@ ${contextName ? `현재 거래처: "${contextName}"` : ''}
       messages = [{ role: 'user', content: userText }];
     }
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://meeting-proxy.kjhmaniya.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
