@@ -2912,7 +2912,7 @@ function handleDriveAuth() {
       await syncAllToDrive();
     },
   });
-  tokenClient.requestAccessToken({ prompt: 'consent' });
+  tokenClient.requestAccessToken({ prompt: '' });
 }
 
 // ── 전체 동기화 ────────────────────────────────────────
