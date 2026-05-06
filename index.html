@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>세강스틸러스 미팅 관리</title>
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--bg:#0b0d12;--surface:#13151e;--surface2:#1a1d28;--border:#2a2f45;--accent:#4f8ef7;--accent2:#7c5cbf;--green:#3ecf8e;--amber:#f5a623;--red:#f76f6f;--text:#e8eaf0;--text2:#8b8fa8;--text3:#4a4f6a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+header{padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+.logo{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+header h1{font-size:16px;font-weight:700}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.drive-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:all .15s;font-family:inherit}
+.drive-off{border-color:var(--border);color:var(--text2);background:var(--surface2)}
+.drive-off:hover{border-color:var(--accent);color:var(--accent)}
+.drive-on{border-color:rgba(62,207,142,.4);color:var(--green);background:rgba(62,207,142,.08)}
+.drive-sync{border-color:rgba(245,166,35,.4);color:var(--amber);background:rgba(245,166,35,.08);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.layout{display:grid;grid-template-columns:260px 1fr;flex:1;overflow:hidden;height:calc(100vh - 57px)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-nav{display:flex;border-bottom:1px solid var(--border)}
+.nav-btn{flex:1;padding:12px 8px;border:none;background:none;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;border-bottom:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-btn:hover:not(.active){color:var(--text);background:var(--surface2)}
+.sb-content{flex:1;overflow-y:auto;padding:8px}
+.company-group{margin-bottom:2px}
+.company-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s;user-select:none}
+.company-row:hover{background:var(--surface2)}
+.company-row.active{background:rgba(79,142,247,.1)}
+.expand-btn{background:none;border:none;color:var(--text3);font-size:9px;cursor:pointer;padding:0 2px;transition:transform .2s;flex-shrink:0}
+.expand-btn.open{transform:rotate(90deg)}
+.c-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.c-info{flex:1;min-width:0}
+.c-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-meta{font-size:11px;color:var(--text2);margin-top:1px}
+.row-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.company-row:hover .row-actions,.sf-item:hover .row-actions{opacity:1}
+.icon-btn{background:none;border:none;color:var(--text2);cursor:pointer;padding:3px 5px;border-radius:4px;font-size:12px;transition:all .15s}
+.icon-btn:hover{color:var(--text);background:var(--border)}
+.icon-btn.del:hover{color:var(--red)}
+.sf-list{padding-left:20px}
+.sf-item{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:7px;cursor:pointer;transition:background .15s;margin-bottom:1px}
+.sf-item:hover{background:var(--surface2)}
+.sf-item.active{background:rgba(79,142,247,.1)}
+.sf-info{flex:1;min-width:0}
+.sf-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sf-meta{font-size:10px;color:var(--text3)}
+.add-btn{width:100%;padding:8px 10px;border:1px dashed var(--border);border-radius:7px;background:none;color:var(--text2);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px;margin-top:4px}
+.add-btn:hover{border-color:var(--accent);color:var(--accent)}
+.todo-sb-item{padding:8px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+.todo-sb-item:hover{border-color:var(--text3)}
+.dday{font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;padding:2px 6px;border-radius:4px;margin-bottom:4px;display:inline-block}
+.dd-red{background:rgba(247,111,111,.15);color:var(--red)}
+.dd-amber{background:rgba(245,166,35,.15);color:var(--amber)}
+.dd-green{background:rgba(62,207,142,.15);color:var(--green)}
+.dd-gray{background:var(--surface2);color:var(--text3);border:1px solid var(--border)}
+.dd-over{background:rgba(247,111,111,.05);color:var(--text3)}
+.todo-sb-text{font-size:12px;color:var(--text);margin-bottom:2px;line-height:1.4}
+.todo-sb-co{font-size:10px;color:var(--text2)}
+.main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.main-home{flex:1;overflow-y:auto;padding:20px 24px}
+.global-stats{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.gstat{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:12px;color:var(--text2)}
+.gstat span{font-weight:700;margin-left:4px}
+.co-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.co-card-header{padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--border)}
+.co-card-header:hover{background:rgba(255,255,255,.02)}
+.co-card-title{font-size:15px;font-weight:700;flex:1}
+.co-card-badge{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500}
+.co-card-sf{padding:8px 14px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap}
+.sf-chip{padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
+.co-card-todos{padding:10px 14px}
+.co-todo-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.co-todo-row:last-child{border-bottom:none}
+.main-header{padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:12px}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px}
+.crumb-co{color:var(--text2);cursor:pointer}
+.crumb-co:hover{color:var(--accent)}
+.crumb-sep{color:var(--text3)}
+.crumb-sub{font-weight:700;color:var(--text)}
+.crumb-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tab{padding:6px 14px;border-radius:6px;border:none;background:none;color:var(--text2);cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;transition:all .15s}
+.tab.active{background:var(--accent);color:#fff}
+.tab:not(.active):hover{background:var(--surface2);color:var(--text)}
+.panel{flex:1;overflow-y:auto;padding:20px 24px}
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.dash-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px}
+.dash-label{font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px}
+.dash-value{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.dash-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.sec-title{font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.todo-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px;transition:border-color .15s;margin-bottom:8px}
+.todo-card:hover{border-color:var(--text3)}
+.todo-card.done{opacity:.4}
+.todo-check{width:18px;height:18px;border-radius:5px;border:2px solid var(--border);background:none;cursor:pointer;flex-shrink:0;margin-top:1px;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:11px}
+.todo-check.checked{background:var(--green);border-color:var(--green);color:#fff}
+.todo-content{flex:1;min-width:0}
+.todo-title{font-size:13px;font-weight:500;margin-bottom:4px}
+.todo-meta{font-size:11px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.form-sec{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.form-sec-title{font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;font-weight:600;color:var(--text2)}
+.fi{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;width:100%}
+.fi:focus{border-color:var(--accent)}
+textarea.fi{resize:vertical;min-height:70px;line-height:1.6}
+.p-panel{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.p-side{flex:1;padding:12px 14px}
+.p-our{background:rgba(79,142,247,.04);border-right:1px solid var(--border)}
+.p-client{background:rgba(62,207,142,.04)}
+.p-head{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.p-dot-b{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.p-dot-g{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.ptags{display:flex;flex-wrap:wrap;gap:5px;min-height:24px;margin-bottom:8px}
+.ptag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:500}
+.ptag-b{background:rgba(79,142,247,.12);color:var(--accent);border:1px solid rgba(79,142,247,.3)}
+.ptag-g{background:rgba(62,207,142,.12);color:var(--green);border:1px solid rgba(62,207,142,.3)}
+.ptag-rm{background:none;border:none;cursor:pointer;color:inherit;opacity:.5;font-size:11px;padding:0}
+.ptag-rm:hover{opacity:1}
+.p-input-row{display:flex;gap:5px;flex-wrap:wrap}
+.p-in{flex:1;min-width:100px;font-size:11px;padding:5px 8px}
+.qbtn{padding:4px 8px;border:1px solid rgba(79,142,247,.3);border-radius:5px;background:rgba(79,142,247,.08);color:var(--accent);font-size:10px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;transition:all .15s}
+.qbtn:hover{background:rgba(79,142,247,.18)}
+.ti-list{display:flex;flex-direction:column;gap:8px}
+.ti-row{display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px}
+.ti-row input[type=text]{flex:1;background:none;border:none;color:var(--text);font-size:13px;font-family:inherit;outline:none}
+.ti-row input[type=text]::placeholder{color:var(--text3)}
+.di{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;outline:none}
+.di:focus{border-color:var(--accent)}
+.add-ti-btn{padding:8px 14px;border:1px dashed var(--border);border-radius:8px;background:none;color:var(--text2);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;width:100%;text-align:left;margin-top:4px}
+.add-ti-btn:hover{border-color:var(--accent);color:var(--accent)}
+.abtn{padding:10px 20px;border-radius:8px;border:none;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:7px}
+.btn-p{background:var(--accent);color:#fff}
+.btn-p:hover{opacity:.9}
+.btn-s{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-s:hover{border-color:var(--accent);color:var(--accent)}
+.btn-g{background:var(--green);color:#0a2418}
+.btn-g:hover{opacity:.9}
+.m-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;transition:border-color .15s}
+.m-card:hover{border-color:var(--text3)}
+.m-card-head{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.date-badge{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--accent)}
+.type-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.tb-m{background:rgba(79,142,247,.12);color:var(--accent)}
+.tb-c{background:rgba(62,207,142,.12);color:var(--green)}
+.tb-o{background:rgba(124,92,191,.12);color:var(--accent2)}
+.chevron{color:var(--text3);font-size:11px;transition:transform .2s}
+.chevron.open{transform:rotate(180deg)}
+.m-attendees{padding:7px 14px;border-bottom:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;background:var(--surface)}
+.m-card-body{padding:14px;border-top:1px solid var(--border);display:none}
+.m-card-body.open{display:block}
+.fl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.fv{font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;margin-bottom:12px}
+.m-todo-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;background:var(--surface);margin-bottom:4px;font-size:12px}
+.log-item{padding:8px 10px;border-radius:7px;background:var(--surface);margin-bottom:4px;font-size:12px}
+.md-view{background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.md-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--surface)}
+.md-fn{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);flex:1}
+.md-body{padding:18px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.9;white-space:pre-wrap;color:var(--text2);max-height:500px;overflow-y:auto}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;color:var(--text3);gap:10px;text-align:center}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;width:440px;max-width:92vw}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:5px}
+.modal p{font-size:13px;color:var(--text2);margin-bottom:18px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.ft-btns{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.ft-btn{padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text2);font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+.ft-btn.active{border-color:var(--accent);background:rgba(79,142,247,.1);color:var(--accent)}
+.opt-row{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s;margin-bottom:8px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.flex-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mt-12{margin-top:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">&#128203;</div>
+  <h1>&#49464;&#44053;&#49828;&#53270;&#47084;&#49828; &#48120;&#54305; &#44288;&#47532;</h1>
+  <div class="header-right">
+    <button class="drive-btn drive-off" id="driveBtn" onclick="handleDriveAuth()" data-state="off">
+      <span id="driveIcon">&#9729;&#65039;</span>
+      <span id="driveLabel">Drive &#50672;&#44208;</span>
+    </button>
+    <span id="totalCount" style="font-size:12px;color:var(--text2)">&#51456; 0&#44148;</span>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-nav">
+      <button class="nav-btn active" id="navCo" onclick="switchNav('co')">
+        <span>&#127970;</span>&#50629;&#52404;
+      </button>
+      <button class="nav-btn" id="navTodo" onclick="switchNav('todo')">
+        <span>&#128204;</span>&#54624; &#51068;
+      </button>
+    </div>
+    <div class="sb-content" id="sbContent"></div>
+    <div style="padding:8px">
+      <button class="add-btn" id="addCoBtn" onclick="openAddCo()">+ &#49352; &#50629;&#52404; &#52628;&#44032;</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="main-home" id="homeView">
+      <div class="global-stats">
+        <div class="gstat">&#51204;&#52404; &#48120;&#54305; <span id="gTotal" style="color:var(--text)">0</span>&#44148;</div>
+        <div class="gstat" style="border-color:rgba(245,166,35,.3);color:var(--amber)">&#51060;&#48264;&#45813; &#54624; &#51068; <span id="gMonth">0</span>&#44148;</div>
+        <div class="gstat" style="border-color:rgba(247,111,111,.3);color:var(--red)">&#44553;&#44553; <span id="gUrgent">0</span>&#44148;</div>
+      </div>
+      <div id="globalDash"></div>
+      <div class="empty-state" id="globalEmpty" style="display:none">
+        <div style="font-size:40px;opacity:.4">&#127970;</div>
+        <div style="font-size:14px;font-weight:500;color:var(--text2)">&#46321;&#47197;&#46108; &#50629;&#52404;&#44032; &#50630;&#49845;&#45768;&#45796;</div>
+        <div style="font-size:13px">&#50672;&#51313; &#54616;&#45800; "+ &#49352; &#50629;&#52404; &#52628;&#44032;" &#48260;&#53948;&#51004;&#47196; &#49884;&#51089;&#54616;&#49464;&#50836;</div>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;flex-direction:column;height:100%">
+      <div class="main-header">
+        <div class="breadcrumb">
+          <div class="crumb-dot" id="hDot"></div>
+          <span class="crumb-co" id="hCo" onclick="backToCo()"></span>
+          <span class="crumb-sep" id="hSep" style="display:none">&rsaquo;</span>
+          <span class="crumb-sub" id="hSub"></span>
+        </div>
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('dash')">&#128202; &#45824;&#49884;&#48372;&#46300;</button>
+          <button class="tab" onclick="switchTab('new')">&#9998;&#65039; &#49352; &#48120;&#54305;</button>
+          <button class="tab" onclick="switchTab('hist')">&#128203; &#51060;&#47141;</button>
+          <button class="tab" onclick="switchTab('md')">&#128196; MD</button>
+        </div>
+      </div>
+
+      <div class="panel" id="tabDash">
+        <div class="dash-grid">
+          <div class="dash-card"><div class="dash-label">&#51204;&#52404; &#48120;&#54305;</div><div class="dash-value" id="dTotal">0</div><div class="dash-sub">&#44148;</div></div>
+          <div class="dash-card"><div class="dash-label">&#51060;&#48264;&#45813; &#54624; &#51068;</div><div class="dash-value" id="dMonth" style="color:var(--amber)">0</div><div class="dash-sub">&#44148;</div></div>
+          <div class="dash-card"><div class="dash-label">&#44553;&#44553; (3&#51068; &#51060;&#45236;)</div><div class="dash-value" id="dUrgent" style="color:var(--red)">0</div><div class="dash-sub">&#44148;</div></div>
+        </div>
+        <div class="sec-title">&#54980;&#49549;&#51312;&#CE58; &#54788;&#54669;</div>
+        <div id="dashTodos"></div>
+      </div>
+
+      <div class="panel" id="tabNew" style="display:none">
+        <div class="form-sec">
+          <div class="form-sec-title">&#44592;&#48376; &#51221;&#48372;</div>
+          <div class="form-grid">
+            <div class="fg"><label>&#48120;&#54305; &#45216;&#51220;</label><input type="date" class="fi" id="metaDate"></div>
+            <div class="fg"><label>&#48120;&#54305; &#50976;&#54805;</label>
+              <select class="fi" id="metaType">
+                <option value="meeting">&#45824;&#47732; &#48120;&#54305;</option>
+                <option value="call">&#53685;&#54868;</option>
+                <option value="online">&#50628;&#46972;&#51064; &#48120;&#54305;</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-sec">
+          <div class="form-sec-title">&#CC38;&#C11D;&#C790;</div>
+          <div class="p-panel">
+            <div class="p-side p-our">
+              <div class="p-head"><div class="p-dot-b"></div>&#C138;&#AC15;&#C2A4;&#D2F8;&#B7EC;&#C2A4;</div>
+              <div class="ptags" id="ourTags"></div>
+              <div class="p-input-row">
+                <input type="text" class="fi p-in" id="ourInput" placeholder="&#C774;&#B984; &#C785;&#B825; &#D6C4; Enter" onkeydown="addP(event,'our')">
+                <button class="qbtn" onclick="addQ('our','\&#C774;&#B3D9;&#D604; &#C0C1;&#BB34;')">&#C774;&#B3D9;&#D604; &#C0C1;&#BB34;</button>
+                <button class="qbtn" onclick="addQ('our','\&#CD5C;&#C815;&#AD6C; &#BD80;&#C7A5;')">&#CD5C;&#C815;&#AD6C; &#BD80;&#C7A5;</button>
+              </div>
+            </div>
+            <div class="p-side p-client">
+              <div class="p-head"><div class="p-dot-g"></div>&#AC70;&#B798;&#CC98; <span id="clientLabel" style="color:var(--text3);font-size:10px;margin-left:3px"></span></div>
+              <div class="ptags" id="clientTags"></div>
+              <div class="p-input-row">
+                <input type="text" class="fi p-in" id="clientInput" placeholder="&#C774;&#B984;/&#C9C1;&#CC45; &#C785;&#B825; &#D6C4; Enter" onkeydown="addP(event,'client')">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-sec">
+          <div class="form-sec-title">&#48120;&#54305; &#45236;&#50857;</div>
+          <div class="fg" style="margin-bottom:12px"><label>&#C8FC;&#C694; &#B17C;&#C758;&#C0AC;&#D56D;</label><textarea class="fi" id="fDisc" rows="4" placeholder="- &#D56D;&#BAA9;&#BCC4;&#B85C; &#C785;&#B825;&#10;- &#C8FC;&#C694; &#B17C;&#C758;&#B41C; &#B0B4;&#C6A9;"></textarea></div>
+          <div class="fg" style="margin-bottom:12px"><label>&#AC00;&#ACB0;&#B41C; &#C0AC;&#D56D;</label><textarea class="fi" id="fDec" rows="3" placeholder="- &#C774;&#BC88; &#BBF8;&#D305;&#C5D0;&#C11C; &#AC00;&#ACB0;&#B41C; &#C0AC;&#D56D;"></textarea></div>
+          <div class="fg"><label>&#D2B9;&#C774;&#C0AC;&#D56D; / &#BA54;&#BAA8;</label><textarea class="fi" id="fMemo" rows="2" placeholder="&#AE30;&#D0C0; &#BA54;&#BAA8;"></textarea></div>
+        </div>
+
+        <div class="form-sec">
+          <div class="form-sec-title">&#D6C4;&#C18D;&#C870;&#CE58; / &#D560; &#C77C;</div>
+          <div class="ti-list" id="tiList"></div>
+          <button class="add-ti-btn" onclick="addTI()">+ &#D6C4;&#C18D;&#C870;&#CE58; &#CD94;&#AC00;</button>
+        </div>
+
+        <div class="flex-row mt-12">
+          <button class="abtn btn-g" onclick="saveMeeting()">&#C800;&#C7A5;</button>
+          <button class="abtn btn-s" onclick="resetForm()">&#CD08;&#AE30;&#D654;</button>
+        </div>
+      </div>
+
+      <div class="panel" id="tabHist" style="display:none">
+        <div id="histList"></div>
+        <div class="empty-state" id="histEmpty" style="display:none">
+          <div style="font-size:40px;opacity:.4">&#128237;</div>
+          <div style="font-size:14px;font-weight:500;color:var(--text2)">&#48120;&#54305; &#AE30;&#B85D;&#C774; &#C5C6;&#C2B5;&#45768;&#B2E4;</div>
+        </div>
+      </div>
+
+      <div class="panel" id="tabMd" style="display:none">
+        <div class="md-view">
+          <div class="md-head">
+            <span>&#128196;</span>
+            <span class="md-fn" id="mdFn"></span>
+            <button class="abtn btn-s" style="padding:5px 10px;font-size:11px" onclick="dlMd()">&#8659; &#B2E4;&#C6B4;&#B85C;&#B4DC;</button>
+            <button class="abtn btn-s" style="padding:5px 10px;font-size:11px;color:var(--accent);border-color:rgba(79,142,247,.3)" onclick="syncMdToDrive()">&#9729;&#65039; Drive</button>
+          </div>
+          <div class="md-body" id="mdBody"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="addCoModal">
+  <div class="modal">
+    <h3>&#49352; &#50629;&#52404; &#52628;&#44032;</h3>
+    <p>&#50629;&#52404;&#47749;&#51012; &#C785;&#B825;&#D558;&#C138;&#C694;</p>
+    <div class="fg" style="margin-bottom:14px"><label>&#C5C5;&#CCB4;&#BA85;</label><input type="text" class="fi" id="newCoName" placeholder="&#C608;: GS&#AC74;&#C124;" onkeydown="if(event.key==='Enter')confirmAddCo()"></div>
+    <div class="modal-actions">
+      <button class="abtn btn-s" onclick="closeModal('addCoModal')">&#CDE8;&#C18C;</button>
+      <button class="abtn btn-p" onclick="confirmAddCo()">&#CD94;&#AC00;</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addSfModal">
+  <div class="modal">
+    <h3>&#D558;&#C704; &#D3F4;&#B354; &#CD94;&#AC00;</h3>
+    <p id="sfDesc"></p>
+    <div class="fg" style="margin-bottom:10px">
+      <label>&#D3F4;&#B354; &#C720;&#D615;</label>
+      <div class="ft-btns">
+        <button class="ft-btn active" id="ftDept" onclick="setFT('dept')">&#BCF8;&#C0AC;/&#BD80;&#C11C;</button>
+        <button class="ft-btn" id="ftSite" onclick="setFT('site')">&#D604;&#C7A5;</button>
+        <button class="ft-btn" id="ftOffice" onclick="setFT('office')">&#C0AC;&#BB34;&#C18C;</button>
+        <button class="ft-btn" id="ftOther" onclick="setFT('other')">&#AE30;&#D0C0;</button>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:14px"><label>&#D3F4;&#B354;&#BA85;</label><input type="text" class="fi" id="newSfName" placeholder="&#C608;: &#BCF8;&#C0AC; &#AD6C;&#B9E4;&#BD80; / &#C704;&#B840;&#C9C0;&#C6D0;2&#BD80;&#C9C0; &#D604;&#C7A5;" onkeydown="if(event.key==='Enter')confirmAddSf()"></div>
+    <div class="modal-actions">
+      <button class="abtn btn-s" onclick="closeModal('addSfModal')">&#CDE8;&#C18C;</button>
+      <button class="abtn btn-p" onclick="confirmAddSf()">&#CD94;&#AC00;</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="todoModal">
+  <div class="modal" style="width:460px">
+    <h3>&#D6C4;&#C18D;&#C870;&#CE58; &#CC98;&#B9AC;</h3>
+    <p id="todoModalTitle" style="color:var(--text);font-weight:500;margin-bottom:4px"></p>
+    <p style="margin-bottom:16px">&#C5B4;&#B5BB;&#AC8C; &#CC98;&#B9AC;&#D558;&#C2DC;&#AC2A;&#C5B4;&#C694;?</p>
+    <div id="optComplete" class="opt-row" onclick="selOpt('complete')">
+      <input type="radio" name="topt" value="complete" style="margin-top:2px;accent-color:var(--green)">
+      <div><div style="font-size:13px;font-weight:600;color:var(--green)">&#C644;&#B8CC; &#CC98;&#B9AC;</div><div style="font-size:12px;color:var(--text2);margin-top:3px">&#C9C4;&#D589;&#C0AC;&#D56D;&#C744; &#AE30;&#B85D;&#D558;&#ACE0; &#C644;&#B8CC;&#B85C; &#D45C;&#C2DC;&#D569;&#B2C8;&#B2E4;</div></div>
+    </div>
+    <div id="optPostpone" class="opt-row" onclick="selOpt('postpone')">
+      <input type="radio" name="topt" value="postpone" style="margin-top:2px;accent-color:var(--amber)">
+      <div><div style="font-size:13px;font-weight:600;color:var(--amber)">&#C77C;&#C815; &#C5F0;&#AE30;</div><div style="font-size:12px;color:var(--text2);margin-top:3px">&#C0C8; &#B0A0;&#C9DC;&#B97C; &#C785;&#B825;&#D558;&#BA74; &#B300;&#C2DC;&#BCF4;&#B4DC;&#C5D0; &#B2E4;&#C2DC; &#D45C;&#C2DC;&#B429;&#B2C8;&#B2E4;</div></div>
+    </div>
+    <div id="completeFields" style="display:none;margin-top:4px">
+      <div class="fg"><label>&#C9C4;&#D589;&#C0AC;&#D56D; &#BA54;&#BAA8; (&#C120;&#D0DD;)</label><textarea class="fi" id="completeMemo" rows="3" placeholder="&#C608;: &#B2F4;&#B2F9;&#C790;&#C640; &#D1B5;&#D654;&#D558;&#C5EC; &#C870;&#AC74; &#D611;&#C758; &#C644;&#B8CC;"></textarea></div>
+    </div>
+    <div id="postponeFields" style="display:none;margin-top:4px">
+      <div class="form-grid">
+        <div class="fg"><label>&#C0C8; &#C608;&#C815; &#B0A0;&#C9DC;</label><input type="date" class="fi" id="postponeDate"></div>
+        <div class="fg"><label>&#C5F0;&#AE30; &#C0AC;&#C720;</label><input type="text" class="fi" id="postponeReason" placeholder="&#C608;: &#C785;&#CC30; &#C5F0;&#AE30;"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="abtn btn-s" onclick="closeModal('todoModal')">&#CDE8;&#C18C;</button>
+      <button class="abtn btn-p" id="todoConfirm" onclick="confirmTodo()" disabled>&#D655;&#C778;</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="display:none;position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--green);color:var(--text);padding:12px 16px;border-radius:10px;font-size:13px;line-height:1.6;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:999;white-space:pre-line;max-width:280px;transition:opacity .3s"></div>
+
+<script>
+var PALETTE=['#4f8ef7','#3ecf8e','#f5a623','#f76f6f','#a78bfa','#fb7185','#34d399','#60a5fa'];
+var FOLDER_ICONS={dept:'[본사]',site:'[현장]',office:'[사무소]',other:'[기타]'};
+var TYPE_MAP={meeting:'대면 미팅',call:'통화',online:'온라인 미팅'};
+var state={companies:[],meetings:{},selectedId:null,selectedCoId:null,expanded:{}};
+var parts={our:[],client:[]};
+var tiItems=[];
+var sfTarget=null,sfType='dept';
+var todoTarget=null,todoOpt=null;
+var nav='co';
+
+function save(){
+  localStorage.setItem('segang_v1',JSON.stringify(state));
+  if(driveToken)saveDataToDrive();
+}
+
+function load(){
+  try{
+    var d=localStorage.getItem('segang_v1');
+    if(d){state=JSON.parse(d);migrate();return;}
+    var old=localStorage.getItem('meeting_app_v2');
+    if(old){
+      var p=JSON.parse(old);
+      state.companies=p.companies||[];
+      state.meetings=p.meetings||{};
+      state.expanded=p.expandedCompanies||{};
+      Object.values(state.meetings).forEach(function(ml){
+        if(!Array.isArray(ml))return;
+        ml.forEach(function(m){
+          if(!m.discussion&&m.transcript)m.discussion=m.transcript;
+          if(!m.decision&&m.summary)m.decision=m.summary;
+          if(!m.todos)m.todos=[];
+          if(!m.followupLog)m.followupLog=[];
+        });
+      });
+      migrate();
+      localStorage.setItem('segang_v1',JSON.stringify(state));
+      showToast('이전 미팅 기록을 복원했어요!');
+    }
+  }catch(e){}
+  migrate();
+}
+
+function migrate(){
+  if(!Array.isArray(state.companies))state.companies=[];
+  if(!state.meetings||typeof state.meetings!=='object')state.meetings={};
+  if(!state.expanded)state.expanded={};
+  state.companies.forEach(function(c){
+    if(!Array.isArray(c.subfolders))c.subfolders=[];
+    if(!Array.isArray(state.meetings[c.id]))state.meetings[c.id]=[];
+    c.subfolders.forEach(function(sf){
+      if(!Array.isArray(state.meetings[sf.id]))state.meetings[sf.id]=[];
+    });
+  });
+  var allIds={};
+  state.companies.forEach(function(c){
+    allIds[c.id]=1;
+    (c.subfolders||[]).forEach(function(sf){allIds[sf.id]=1;});
+  });
+  if(state.selectedId&&!allIds[state.selectedId]){state.selectedId=null;state.selectedCoId=null;}
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  load();
+  var d=document.getElementById('metaDate');
+  if(d)d.value=today();
+  renderSb();
+  updateCount();
+  addTI();
+  renderGlobalDash();
+  initDrive();
+});
+
+function today(){return new Date().toISOString().split('T')[0];}
+
+function switchNav(n){
+  nav=n;
+  document.getElementById('navCo').classList.toggle('active',n==='co');
+  document.getElementById('navTodo').classList.toggle('active',n==='todo');
+  document.getElementById('addCoBtn').style.display=n==='co'?'flex':'none';
+  renderSb();
+}
+
+function renderSb(){
+  var el=document.getElementById('sbContent');
+  if(nav==='todo'){renderSbTodos(el);return;}
+  if(!state.companies.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">업체가 없습니다</div>';return;}
+  el.innerHTML=state.companies.map(function(c){
+    var isExp=state.expanded[c.id];
+    var sfs=c.subfolders||[];
+    var total=(state.meetings[c.id]||[]).length+sfs.reduce(function(s,sf){return s+(state.meetings[sf.id]||[]).length;},0);
+    var isActive=state.selectedId===c.id&&state.selectedCoId===c.id;
+    return '<div class="company-group">'+
+      '<div class="company-row'+(isActive?' active':'')+'">'+
+      '<button class="expand-btn'+(isExp?' open':'')+'" onclick="toggleExp(\''+c.id+'\',event)">&#9658;</button>'+
+      '<div class="c-dot" style="background:'+c.color+'"></div>'+
+      '<div class="c-info" onclick="selView(\''+c.id+'\',\''+c.id+'\')">'+
+        '<div class="c-name">'+c.name+'</div>'+
+        '<div class="c-meta">'+total+'건 · 폴더 '+sfs.length+'개</div>'+
+      '</div>'+
+      '<div class="row-actions">'+
+        '<button class="icon-btn" onclick="openAddSf(\''+c.id+'\',event)">+</button>'+
+        '<button class="icon-btn del" onclick="delCo(\''+c.id+'\',event)">&#10005;</button>'+
+      '</div>'+
+      '</div>'+
+      (isExp?'<div class="sf-list">'+
+        sfs.map(function(sf){
+          var cnt=(state.meetings[sf.id]||[]).length;
+          var sfActive=state.selectedId===sf.id;
+          return '<div class="sf-item'+(sfActive?' active':'')+'" onclick="selView(\''+sf.id+'\',\''+c.id+'\')">'+
+            '<span style="font-size:11px;color:var(--text3)">'+FOLDER_ICONS[sf.type]+'</span>'+
+            '<div class="sf-info"><div class="sf-name">'+sf.name+'</div><div class="sf-meta">'+cnt+'건</div></div>'+
+            '<div class="row-actions"><button class="icon-btn del" onclick="delSf(\''+c.id+'\',\''+sf.id+'\',event)">&#10005;</button></div>'+
+          '</div>';
+        }).join('')+
+        '<button class="add-btn" onclick="openAddSf(\''+c.id+'\',event)">+ 폴더 추가</button>'+
+      '</div>':'')+
+    '</div>';
+  }).join('');
+}
+
+function renderSbTodos(el){
+  var all=getAllTodos();
+  var now=new Date();now.setHours(0,0,0,0);
+  var upcoming=all.filter(function(t){return !t.done&&t.date&&new Date(t.date)>=now;})
+    .sort(function(a,b){return a.date.localeCompare(b.date);}).slice(0,15);
+  if(!upcoming.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">예정된 후속조치가 없습니다</div>';return;}
+  el.innerHTML=upcoming.map(function(t){
+    var di=getDday(t.date);
+    return '<div class="todo-sb-item" onclick="selView(\''+t.viewId+'\',\''+t.coId+'\')">'+
+      '<span class="dday '+di.cls+'">'+di.label+'</span>'+
+      '<div class="todo-sb-text">'+t.text+'</div>'+
+      '<div class="todo-sb-co">'+t.coName+(t.sfName?' · '+t.sfName:'')+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openAddCo(){
+  document.getElementById('addCoModal').classList.add('open');
+  setTimeout(function(){document.getElementById('newCoName').focus();},100);
+}
+
+function confirmAddCo(){
+  var name=document.getElementById('newCoName').value.trim();
+  if(!name)return;
+  var id='c_'+Date.now();
+  var color=PALETTE[state.companies.length%PALETTE.length];
+  state.companies.push({id:id,name:name,color:color,subfolders:[],createdAt:new Date().toISOString()});
+  state.meetings[id]=[];
+  save();closeModal('addCoModal');
+  document.getElementById('newCoName').value='';
+  renderSb();selView(id,id);renderGlobalDash();
+}
+
+function delCo(id,e){
+  e.stopPropagation();
+  if(!confirm('업체를 삭제하면 모든 미팅 기록도 삭제됩니다.'))return;
+  var c=state.companies.find(function(x){return x.id===id;});
+  (c.subfolders||[]).forEach(function(sf){delete state.meetings[sf.id];});
+  delete state.meetings[id];
+  state.companies=state.companies.filter(function(x){return x.id!==id;});
+  if(state.selectedCoId===id){state.selectedId=null;state.selectedCoId=null;showHome();}
+  save();renderSb();updateCount();renderGlobalDash();
+}
+
+function delSf(coId,sfId,e){
+  e.stopPropagation();
+  if(!confirm('폴더를 삭제하면 해당 미팅 기록도 삭제됩니다.'))return;
+  var c=state.companies.find(function(x){return x.id===coId;});
+  if(c)c.subfolders=(c.subfolders||[]).filter(function(sf){return sf.id!==sfId;});
+  delete state.meetings[sfId];
+  if(state.selectedId===sfId){state.selectedId=null;state.selectedCoId=null;showHome();}
+  save();renderSb();updateCount();renderGlobalDash();
+}
+
+function toggleExp(id,e){
+  e.stopPropagation();
+  state.expanded[id]=!state.expanded[id];
+  save();renderSb();
+}
+
+function openAddSf(coId,e){
+  if(e)e.stopPropagation();
+  sfTarget=coId;
+  var c=state.companies.find(function(x){return x.id===coId;});
+  document.getElementById('sfDesc').textContent=c.name+'의 부서 또는 현장을 추가하세요';
+  document.getElementById('newSfName').value='';
+  setFT('dept');
+  document.getElementById('addSfModal').classList.add('open');
+  setTimeout(function(){document.getElementById('newSfName').focus();},100);
+}
+
+function setFT(t){
+  sfType=t;
+  ['Dept','Site','Office','Other'].forEach(function(x){
+    var btn=document.getElementById('ft'+x);
+    if(btn)btn.classList.toggle('active',x.toLowerCase()===t);
+  });
+}
+
+function confirmAddSf(){
+  var name=document.getElementById('newSfName').value.trim();
+  if(!name)return;
+  var c=state.companies.find(function(x){return x.id===sfTarget;});
+  if(!c)return;
+  if(!c.subfolders)c.subfolders=[];
+  var sfId='sf_'+Date.now();
+  c.subfolders.push({id:sfId,name:name,type:sfType,createdAt:new Date().toISOString()});
+  state.meetings[sfId]=[];
+  state.expanded[c.id]=true;
+  save();closeModal('addSfModal');
+  renderSb();selView(sfId,c.id);renderGlobalDash();
+}
+
+function selView(viewId,coId){
+  state.selectedId=viewId;
+  state.selectedCoId=coId;
+  var c=state.companies.find(function(x){return x.id===coId;});
+  var sf=(c.subfolders||[]).find(function(x){return x.id===viewId;});
+  document.getElementById('homeView').style.display='none';
+  document.getElementById('mainView').style.display='flex';
+  document.getElementById('hDot').style.background=c.color;
+  document.getElementById('hCo').textContent=c.name;
+  var sep=document.getElementById('hSep'),sub=document.getElementById('hSub');
+  if(sf){sep.style.display='';sub.textContent=FOLDER_ICONS[sf.type]+' '+sf.name;}
+  else{sep.style.display='none';sub.textContent='';}
+  var lbl=document.getElementById('clientLabel');
+  if(lbl)lbl.textContent='('+c.name+')';
+  var fname=sf?c.name.replace(/\s/g,'_')+'_'+sf.name.replace(/\s/g,'_')+'_미팅기록.md':c.name.replace(/\s/g,'_')+'_미팅기록.md';
+  document.getElementById('mdFn').textContent=fname;
+  if(!state.meetings[viewId])state.meetings[viewId]=[];
+  renderSb();switchTab('dash');save();
+}
+
+function backToCo(){if(state.selectedCoId)selView(state.selectedCoId,state.selectedCoId);}
+
+function showHome(){
+  document.getElementById('homeView').style.display='block';
+  document.getElementById('mainView').style.display='none';
+  renderGlobalDash();
+}
+
+function switchTab(t){
+  ['dash','new','hist','md'].forEach(function(x){
+    var el=document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1));
+    if(el)el.style.display=x===t?'block':'none';
+  });
+  document.querySelectorAll('.tab').forEach(function(b,i){
+    b.classList.toggle('active',['dash','new','hist','md'][i]===t);
+  });
+  if(t==='dash')renderDash();
+  if(t==='hist')renderHist();
+  if(t==='md')renderMd();
+  if(t==='new'){var d=document.getElementById('metaDate');if(d&&!d.value)d.value=today();}
+}
+
+function addP(e,side){
+  if(e.key!=='Enter')return;
+  var id=side==='our'?'ourInput':'clientInput';
+  var name=document.getElementById(id).value.trim();
+  if(!name)return;
+  if(!parts[side].includes(name)){parts[side].push(name);renderTags();}
+  document.getElementById(id).value='';
+}
+
+function addQ(side,name){
+  if(!parts[side].includes(name)){parts[side].push(name);renderTags();}
+}
+
+function removeP(side,name){
+  parts[side]=parts[side].filter(function(n){return n!==name;});
+  renderTags();
+}
+
+function renderTags(){
+  document.getElementById('ourTags').innerHTML=parts.our.map(function(n){
+    return '<span class="ptag ptag-b">'+n+'<button class="ptag-rm" onclick="removeP(\'our\',\''+n+'\')">x</button></span>';
+  }).join('');
+  document.getElementById('clientTags').innerHTML=parts.client.map(function(n){
+    return '<span class="ptag ptag-g">'+n+'<button class="ptag-rm" onclick="removeP(\'client\',\''+n+'\')">x</button></span>';
+  }).join('');
+}
+
+function addTI(){
+  var id='ti_'+Date.now()+'_'+Math.random();
+  tiItems.push({id:id,text:'',date:''});
+  renderTIs();
+}
+
+function removeTI(id){
+  tiItems=tiItems.filter(function(t){return t.id!==id;});
+  renderTIs();
+}
+
+function renderTIs(){
+  document.getElementById('tiList').innerHTML=tiItems.map(function(t){
+    return '<div class="ti-row">'+
+      '<input type="text" placeholder="후속조치 내용 입력" value="'+t.text.replace(/"/g,'&quot;')+'" oninput="updateTI(\''+t.id+'\',\'text\',this.value)">'+
+      '<input type="date" class="di" value="'+t.date+'" oninput="updateTI(\''+t.id+'\',\'date\',this.value)">'+
+      '<button class="icon-btn del" onclick="removeTI(\''+t.id+'\')">x</button>'+
+    '</div>';
+  }).join('');
+}
+
+function updateTI(id,field,val){
+  var t=tiItems.find(function(x){return x.id===id;});
+  if(t)t[field]=val;
+}
+
+function saveMeeting(){
+  if(!state.selectedId){alert('업체 또는 폴더를 선택해주세요.');return;}
+  var disc=document.getElementById('fDisc').value.trim();
+  var dec=document.getElementById('fDec').value.trim();
+  var memo=document.getElementById('fMemo').value.trim();
+  if(!disc&&!dec&&!memo){alert('미팅 내용을 입력해주세요.');return;}
+  var todos=tiItems.filter(function(t){return t.text.trim();}).map(function(t){
+    return {id:'todo_'+Date.now()+'_'+Math.random(),text:t.text.trim(),date:t.date,done:false};
+  });
+  var m={
+    id:'m_'+Date.now(),
+    date:document.getElementById('metaDate').value||today(),
+    type:document.getElementById('metaType').value,
+    attendeesOur:parts.our.slice(),
+    attendeesClient:parts.client.slice(),
+    discussion:disc,decision:dec,memo:memo,todos:todos,followupLog:[],
+    createdAt:new Date().toISOString()
+  };
+  state.meetings[state.selectedId].push(m);
+  state.meetings[state.selectedId].sort(function(a,b){return a.date.localeCompare(b.date);});
+  save();updateCount();renderSb();
+  resetForm();showToast('미팅이 저장되었습니다!');
+  switchTab('dash');renderGlobalDash();
+}
+
+function resetForm(){
+  document.getElementById('metaDate').value=today();
+  document.getElementById('metaType').value='meeting';
+  document.getElementById('fDisc').value='';
+  document.getElementById('fDec').value='';
+  document.getElementById('fMemo').value='';
+  parts={our:[],client:[]};renderTags();
+  tiItems=[];addTI();
+}
+
+function getAllTodos(){
+  var res=[];
+  state.companies.forEach(function(c){
+    function add(viewId,sfName){
+      (state.meetings[viewId]||[]).forEach(function(m){
+        (m.todos||[]).forEach(function(t){
+          res.push(Object.assign({},t,{viewId:viewId,coId:c.id,coName:c.name,sfName:sfName,meetingDate:m.date,meetingId:m.id}));
+        });
+      });
+    }
+    add(c.id,null);
+    (c.subfolders||[]).forEach(function(sf){add(sf.id,sf.name);});
+  });
+  return res;
+}
+
+function getCurTodos(){
+  var res=[];
+  (state.meetings[state.selectedId]||[]).forEach(function(m){
+    (m.todos||[]).forEach(function(t){
+      res.push(Object.assign({},t,{meetingDate:m.date,meetingId:m.id}));
+    });
+  });
+  return res;
+}
+
+function getDday(dateStr){
+  if(!dateStr)return{cls:'dd-gray',label:'날짜 미정'};
+  var now=new Date();now.setHours(0,0,0,0);
+  var d=new Date(dateStr);
+  var diff=Math.round((d-now)/86400000);
+  if(diff<0)return{cls:'dd-over',label:'D+'+Math.abs(diff)};
+  if(diff===0)return{cls:'dd-red',label:'D-Day'};
+  if(diff<=3)return{cls:'dd-red',label:'D-'+diff};
+  if(diff<=14)return{cls:'dd-amber',label:'D-'+diff};
+  return{cls:'dd-green',label:'D-'+diff};
+}
+
+function renderGlobalDash(){
+  var now=new Date();now.setHours(0,0,0,0);
+  var mEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
+  var allTodos=getAllTodos();
+  var totMtg=Object.values(state.meetings).filter(Array.isArray).reduce(function(s,m){return s+m.length;},0);
+  var thisMon=allTodos.filter(function(t){return !t.done&&t.date&&new Date(t.date)>=now&&new Date(t.date)<=mEnd;});
+  var urg=allTodos.filter(function(t){return !t.done&&t.date&&(new Date(t.date)-now)/86400000<=3&&new Date(t.date)>=now;});
+  document.getElementById('gTotal').textContent=totMtg;
+  document.getElementById('gMonth').textContent=thisMon.length;
+  document.getElementById('gUrgent').textContent=urg.length;
+  var dash=document.getElementById('globalDash');
+  var empty=document.getElementById('globalEmpty');
+  if(!state.companies.length){dash.innerHTML='';empty.style.display='flex';return;}
+  empty.style.display='none';
+  dash.innerHTML=state.companies.map(function(c){
+    var sfs=c.subfolders||[];
+    var views=[{id:c.id,name:null,type:null}].concat(sfs.map(function(sf){return{id:sf.id,name:sf.name,type:sf.type};}));
+    var coTodos=[];
+    views.forEach(function(v){
+      (state.meetings[v.id]||[]).forEach(function(m){
+        (m.todos||[]).forEach(function(t){
+          coTodos.push(Object.assign({},t,{meetingDate:m.date,meetingId:m.id,viewId:v.id,sfName:v.name}));
+        });
+      });
+    });
+    var totMtg2=views.reduce(function(s,v){return s+(state.meetings[v.id]||[]).length;},0);
+    var active=coTodos.filter(function(t){return !t.done;}).sort(function(a,b){
+      if(!a.date&&!b.date)return 0;if(!a.date)return 1;if(!b.date)return-1;
+      return a.date.localeCompare(b.date);
+    });
+    var urgCnt=active.filter(function(t){return t.date&&(new Date(t.date)-now)/86400000<=3&&new Date(t.date)>=now;}).length;
+    return '<div class="co-card">'+
+      '<div class="co-card-header" onclick="selView(\''+c.id+'\',\''+c.id+'\')">'+
+        '<div style="width:10px;height:10px;border-radius:50%;background:'+c.color+';flex-shrink:0"></div>'+
+        '<div class="co-card-title">'+c.name+'</div>'+
+        '<div style="font-size:12px;color:var(--text2)">미팅 '+totMtg2+'건</div>'+
+        (urgCnt>0?'<div class="co-card-badge" style="background:rgba(247,111,111,.12);color:var(--red)">긴급 '+urgCnt+'건</div>':'')+
+        (sfs.length?'<div style="font-size:11px;color:var(--text3)">폴더 '+sfs.length+'개</div>':'')+
+      '</div>'+
+      (sfs.length?'<div class="co-card-sf">'+
+        sfs.map(function(sf){
+          var sfCnt=(state.meetings[sf.id]||[]).length;
+          var sfTodos=coTodos.filter(function(t){return t.viewId===sf.id&&!t.done;});
+          return '<button class="sf-chip" onclick="selView(\''+sf.id+'\',\''+c.id+'\')">'+
+            FOLDER_ICONS[sf.type]+' '+sf.name+' ('+sfCnt+'건'+(sfTodos.length?' · 할일 '+sfTodos.length:'')+')</button>';
+        }).join('')+
+      '</div>':'')+
+      (active.length?'<div class="co-card-todos">'+
+        active.slice(0,3).map(function(t){
+          var di=getDday(t.date);
+          return '<div class="co-todo-row">'+
+            '<span class="dday '+di.cls+'" style="font-size:10px;padding:1px 6px;flex-shrink:0">'+di.label+'</span>'+
+            '<span style="flex:1;color:var(--text)">'+t.text+'</span>'+
+            (t.sfName?'<span style="color:var(--text3);font-size:11px">'+t.sfName+'</span>':'')+
+          '</div>';
+        }).join('')+
+        (active.length>3?'<div style="text-align:center;padding:6px;font-size:11px;color:var(--text3)">+ '+(active.length-3)+'건 더보기</div>':'')+
+      '</div>':'<div style="padding:10px 16px;font-size:12px;color:var(--text3)">후속조치 없음</div>')+
+    '</div>';
+  }).join('');
+}
+
+function renderDash(){
+  var mtgs=state.meetings[state.selectedId]||[];
+  var todos=getCurTodos();
+  var now=new Date();now.setHours(0,0,0,0);
+  var mEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
+  var thisMon=todos.filter(function(t){return !t.done&&t.date&&new Date(t.date)>=now&&new Date(t.date)<=mEnd;});
+  var urg=todos.filter(function(t){return !t.done&&t.date&&(new Date(t.date)-now)/86400000<=3&&new Date(t.date)>=now;});
+  document.getElementById('dTotal').textContent=mtgs.length;
+  document.getElementById('dMonth').textContent=thisMon.length;
+  document.getElementById('dUrgent').textContent=urg.length;
+  var list=document.getElementById('dashTodos');
+  var active=todos.filter(function(t){return !t.done&&t.date;}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  var noDate=todos.filter(function(t){return !t.done&&!t.date;});
+  var done=todos.filter(function(t){return t.done;});
+  if(!todos.length){list.innerHTML='<div class="empty-state" style="padding:24px"><div style="font-size:40px;opacity:.4">&#10003;</div><div style="font-size:14px;color:var(--text2)">후속조치가 없습니다</div></div>';return;}
+  list.innerHTML=active.concat(noDate,done).map(function(t){
+    var di=getDday(t.date);
+    var pb=t.postponed&&!t.done?' [연기됨]':'';
+    return '<div class="todo-card'+(t.done?' done':'')+'">'+
+      '<div class="todo-check'+(t.done?' checked':'')+'" onclick="toggleTodo(\''+t.meetingId+'\',\''+t.id+'\')">'+( t.done?'V':'')+' </div>'+
+      '<div class="todo-content">'+
+        '<div class="todo-title">'+t.text+pb+'</div>'+
+        '<div class="todo-meta">'+
+          '<span class="dday '+di.cls+'" style="font-size:10px;padding:1px 6px">'+di.label+'</span>'+
+          '<span>미팅: '+t.meetingDate+'</span>'+
+        '</div>'+
+        (t.completeMemo?'<div style="font-size:11px;color:var(--green);margin-top:4px">메모: '+t.completeMemo+'</div>':'')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function toggleTodo(meetingId,todoId){
+  var m=(state.meetings[state.selectedId]||[]).find(function(x){return x.id===meetingId;});
+  if(!m)return;
+  var t=(m.todos||[]).find(function(x){return x.id===todoId;});
+  if(!t)return;
+  if(t.done){t.done=false;save();renderDash();renderHist();renderSb();return;}
+  todoTarget={meetingId:meetingId,todoId:todoId,selId:state.selectedId};
+  todoOpt=null;
+  document.getElementById('todoModalTitle').textContent=t.text;
+  document.getElementById('completeMemo').value='';
+  document.getElementById('postponeDate').value=t.date||'';
+  document.getElementById('postponeReason').value='';
+  document.getElementById('completeFields').style.display='none';
+  document.getElementById('postponeFields').style.display='none';
+  document.getElementById('todoConfirm').disabled=true;
+  document.querySelectorAll('input[name="topt"]').forEach(function(r){r.checked=false;});
+  document.getElementById('optComplete').style.borderColor='var(--border)';
+  document.getElementById('optPostpone').style.borderColor='var(--border)';
+  document.getElementById('todoModal').classList.add('open');
+}
+
+function selOpt(opt){
+  todoOpt=opt;
+  document.getElementById('completeFields').style.display=opt==='complete'?'block':'none';
+  document.getElementById('postponeFields').style.display=opt==='postpone'?'block':'none';
+  document.getElementById('todoConfirm').disabled=false;
+  document.getElementById('optComplete').style.borderColor=opt==='complete'?'var(--green)':'var(--border)';
+  document.getElementById('optPostpone').style.borderColor=opt==='postpone'?'var(--amber)':'var(--border)';
+  document.querySelector('input[name="topt"][value="'+opt+'"]').checked=true;
+}
+
+function confirmTodo(){
+  if(!todoTarget||!todoOpt)return;
+  var m=(state.meetings[todoTarget.selId]||[]).find(function(x){return x.id===todoTarget.meetingId;});
+  if(!m)return;
+  var t=(m.todos||[]).find(function(x){return x.id===todoTarget.todoId;});
+  if(!t)return;
+  var now=new Date().toISOString().split('T')[0];
+  if(!m.followupLog)m.followupLog=[];
+  if(todoOpt==='complete'){
+    var memo=document.getElementById('completeMemo').value.trim();
+    t.done=true;t.completedAt=now;t.completeMemo=memo;
+    m.followupLog.push({id:'log_'+Date.now(),date:now,todoText:t.text,memo:memo||'완료 처리됨',type:'complete'});
+    showToast('완료 처리되었습니다'+(memo?'\n메모가 기록에 추가됐어요':''));
+  } else {
+    var nd=document.getElementById('postponeDate').value;
+    var reason=document.getElementById('postponeReason').value.trim();
+    if(!nd){alert('새 예정 날짜를 입력해주세요.');return;}
+    var old=t.date;t.date=nd;t.postponed=true;
+    m.followupLog.push({id:'log_'+Date.now(),date:now,todoText:t.text,memo:'일정 연기: '+(old||'미정')+' -> '+nd+(reason?' ('+reason+')':''),type:'postpone'});
+    showToast('일정이 '+nd+'로 연기되었습니다\n대시보드에 다시 표시됩니다');
+  }
+  save();closeModal('todoModal');renderDash();renderHist();renderSb();renderGlobalDash();
+}
+
+function renderHist(){
+  var mtgs=state.meetings[state.selectedId]||[];
+  mtgs=[].concat(mtgs).reverse();
+  var list=document.getElementById('histList');
+  var empty=document.getElementById('histEmpty');
+  if(!mtgs.length){list.innerHTML='';empty.style.display='flex';return;}
+  empty.style.display='none';
+  list.innerHTML=mtgs.map(function(m,i){
+    var ourN=(m.attendeesOur||[]).join(', ');
+    var clientN=(m.attendeesClient||[]).join(', ');
+    return '<div class="m-card">'+
+      '<div class="m-card-head" onclick="toggleCard('+i+')">'+
+        '<span class="date-badge">'+m.date+'</span>'+
+        '<span class="type-badge tb-'+m.type+'">'+TYPE_MAP[m.type]+'</span>'+
+        '<span style="flex:1"></span>'+
+        '<span class="chevron" id="chev_'+i+'">v</span>'+
+      '</div>'+
+      (ourN||clientN?'<div class="m-attendees">'+
+        (ourN?'<span style="font-size:12px"><span style="color:var(--accent)">세강</span> <span style="color:var(--text);font-weight:500">'+ourN+'</span></span>':'')+
+        (clientN?'<span style="font-size:12px"><span style="color:var(--green)">거래처</span> <span style="color:var(--text);font-weight:500">'+clientN+'</span></span>':'')+
+      '</div>':'')+
+      '<div class="m-card-body" id="body_'+i+'">'+
+        (m.discussion?'<div class="fl">주요 논의사항</div><div class="fv">'+m.discussion+'</div>':'')+
+        (m.decision?'<div class="fl">결정된 사항</div><div class="fv">'+m.decision+'</div>':'')+
+        (m.memo?'<div class="fl">특이사항</div><div class="fv">'+m.memo+'</div>':'')+
+        ((m.todos||[]).length?'<div class="fl">후속조치</div>'+m.todos.map(function(t){
+          var di=getDday(t.date);
+          return '<div class="m-todo-item">'+
+            '<div class="todo-check'+(t.done?' checked':'')+'" onclick="toggleTodo(\''+m.id+'\',\''+t.id+'\')" style="width:16px;height:16px;font-size:10px">'+(t.done?'V':'')+' </div>'+
+            '<span class="dday '+di.cls+'" style="font-size:10px;padding:1px 5px">'+di.label+'</span>'+
+            '<div style="flex:1"><span style="'+(t.done?'text-decoration:line-through;opacity:.5':'')+'">'+(t.postponed&&!t.done?'[연기] ':'')+t.text+'</span>'+
+            (t.completeMemo?'<div style="font-size:11px;color:var(--green);margin-top:2px">메모: '+t.completeMemo+'</div>':'')+
+            '</div></div>';
+        }).join(''):'')+
+        ((m.followupLog||[]).length?'<div class="fl" style="margin-top:10px;color:var(--accent2)">진행 이력</div>'+m.followupLog.map(function(log){
+          return '<div class="log-item" style="border-left:3px solid '+(log.type==='complete'?'var(--green)':'var(--amber)')+'">'+
+            '<div style="color:var(--text2);margin-bottom:2px">'+log.date+'</div>'+
+            '<div style="color:var(--text)">'+log.memo+'</div>'+
+          '</div>';
+        }).join(''):'')+
+        '<div style="display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">'+
+          '<button class="abtn btn-s" style="padding:5px 10px;font-size:11px" onclick="delMeeting(\''+m.id+'\')">삭제</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function toggleCard(i){
+  document.getElementById('body_'+i).classList.toggle('open');
+  document.getElementById('chev_'+i).classList.toggle('open');
+}
+
+function delMeeting(id){
+  if(!confirm('이 미팅 기록을 삭제하시겠습니까?'))return;
+  state.meetings[state.selectedId]=(state.meetings[state.selectedId]||[]).filter(function(m){return m.id!==id;});
+  save();updateCount();renderSb();renderHist();renderGlobalDash();
+}
+
+function genMd(){
+  var c=state.companies.find(function(x){return x.id===state.selectedCoId;});
+  if(!c)return'';
+  var sf=(c.subfolders||[]).find(function(x){return x.id===state.selectedId;});
+  var mtgs=state.meetings[state.selectedId]||[];
+  var title=sf?c.name+' - '+FOLDER_ICONS[sf.type]+' '+sf.name:c.name;
+  var lines=['# '+title+' 미팅 기록','','> 생성: '+new Date().toLocaleDateString('ko-KR')+' | 총 '+mtgs.length+'건','','---',''];
+  if(!mtgs.length){lines.push('*미팅 기록이 없습니다.*');return lines.join('\n');}
+  mtgs.forEach(function(m,i){
+    lines.push('## '+(i+1)+'. '+m.date+' -- '+(TYPE_MAP[m.type]||m.type),'');
+    if((m.attendeesOur||[]).length)lines.push('**세강스틸러스:** '+m.attendeesOur.join(', '));
+    if((m.attendeesClient||[]).length)lines.push('**거래처:** '+m.attendeesClient.join(', '));
+    lines.push('');
+    if(m.discussion)lines.push('### 주요 논의사항','',m.discussion,'');
+    if(m.decision)lines.push('### 결정된 사항','',m.decision,'');
+    if(m.memo)lines.push('### 특이사항','',m.memo,'');
+    if((m.todos||[]).length){
+      lines.push('### 후속조치','');
+      m.todos.forEach(function(t){
+        lines.push('- ['+(t.done?'x':' ')+'] '+t.text+(t.date?' ('+t.date+')':'')+(t.postponed&&!t.done?' [연기됨]':''));
+        if(t.completeMemo)lines.push('  - 완료 메모: '+t.completeMemo);
+      });
+      lines.push('');
+    }
+    if((m.followupLog||[]).length){
+      lines.push('### 진행 이력','');
+      m.followupLog.forEach(function(log){lines.push('- '+log.date+': '+log.memo);});
+      lines.push('');
+    }
+    lines.push('---','');
+  });
+  return lines.join('\n');
+}
+
+function renderMd(){document.getElementById('mdBody').textContent=genMd();}
+
+function dlMd(){
+  var c=state.companies.find(function(x){return x.id===state.selectedCoId;});
+  if(!c)return;
+  var sf=(c.subfolders||[]).find(function(x){return x.id===state.selectedId;});
+  var md=genMd();
+  var blob=new Blob(['\uFEFF'+md],{type:'text/markdown;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download=sf?c.name.replace(/\s/g,'_')+'_'+sf.name.replace(/\s/g,'_')+'_미팅기록.md':c.name.replace(/\s/g,'_')+'_미팅기록.md';
+  a.click();URL.revokeObjectURL(url);
+}
+
+function updateCount(){
+  var total=Object.values(state.meetings).filter(Array.isArray).reduce(function(s,m){return s+m.length;},0);
+  document.getElementById('totalCount').textContent='총 '+total+'건';
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';t.style.opacity='1';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.style.display='none';},300);},3000);
+}
+
+var GDRIVE_CLIENT_ID='647037514264-8l7n4imre6gg6slbm92isv138mo0cdiq.apps.googleusercontent.com';
+var GDRIVE_SCOPES='https://www.googleapis.com/auth/drive.file';
+var DRIVE_FOLDER='세강스틸러스 미팅기록';
+var DATA_FILE='segang_data.json';
+var driveToken=null,driveReady=false,driveFolderId=null;
+
+function initDrive(){
+  if(!window.gapi||!GDRIVE_CLIENT_ID){setDriveStatus('off');return;}
+  gapi.load('client',function(){
+    gapi.client.init({discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']}).then(function(){
+      driveReady=true;
+      var saved=localStorage.getItem('drive_token_sg');
+      if(saved){
+        var tc=google.accounts.oauth2.initTokenClient({
+          client_id:GDRIVE_CLIENT_ID,scope:GDRIVE_SCOPES,
+          callback:function(resp){
+            if(resp.error){setDriveStatus('off');return;}
+            driveToken=resp;gapi.client.setToken(driveToken);
+            localStorage.setItem('drive_token_sg',JSON.stringify(driveToken));
+            setDriveStatus('on');loadDataFromDrive();
+          }
+        });
+        tc.requestAccessToken({prompt:''});
+      } else {setDriveStatus('off');}
+    }).catch(function(){setDriveStatus('off');});
+  });
+}
+
+function handleDriveAuth(){
+  var s=document.getElementById('driveBtn').dataset.state;
+  if(s==='on'){driveSignOut();return;}
+  if(!driveReady){alert('초기화 중입니다. 잠시 후 다시 시도해주세요.');return;}
+  var tc=google.accounts.oauth2.initTokenClient({
+    client_id:GDRIVE_CLIENT_ID,scope:GDRIVE_SCOPES,
+    callback:function(resp){
+      if(resp.error){alert('Drive 연결 실패: '+resp.error);return;}
+      driveToken=resp;gapi.client.setToken(driveToken);
+      localStorage.setItem('drive_token_sg',JSON.stringify(driveToken));
+      setDriveStatus('on');loadDataFromDrive();showToast('Drive 연결됐습니다!');
+    }
+  });
+  tc.requestAccessToken({prompt:''});
+}
+
+function driveSignOut(){
+  if(!confirm('Drive 연결을 해제하시겠습니까?'))return;
+  if(driveToken)google.accounts.oauth2.revoke(driveToken.access_token,function(){});
+  driveToken=null;driveFolderId=null;gapi.client.setToken(null);
+  localStorage.removeItem('drive_token_sg');setDriveStatus('off');
+}
+
+function setDriveStatus(s){
+  var btn=document.getElementById('driveBtn');
+  var icon=document.getElementById('driveIcon');
+  var label=document.getElementById('driveLabel');
+  btn.dataset.state=s;btn.className='drive-btn';
+  if(s==='on'){btn.classList.add('drive-on');icon.textContent='✓';label.textContent='Drive 연결됨';}
+  else if(s==='sync'){btn.classList.add('drive-sync');icon.textContent='↻';label.textContent='동기화 중...';}
+  else{btn.classList.add('drive-off');icon.textContent='☁';label.textContent='Drive 연결';}
+}
+
+function getOrCreateFolder(){
+  if(driveFolderId)return Promise.resolve(driveFolderId);
+  return gapi.client.drive.files.list({
+    q:"name='"+DRIVE_FOLDER+"' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+    fields:'files(id)'
+  }).then(function(res){
+    if(res.result.files.length){driveFolderId=res.result.files[0].id;return driveFolderId;}
+    return gapi.client.drive.files.create({
+      resource:{name:DRIVE_FOLDER,mimeType:'application/vnd.google-apps.folder'},fields:'id'
+    }).then(function(cr){driveFolderId=cr.result.id;return driveFolderId;});
+  });
+}
+
+function uploadFile(blob,meta,fileId){
+  return new Promise(function(res,rej){
+    var reader=new FileReader();
+    reader.onload=function(){
+      var b64=reader.result.split(',')[1];
+      var boundary='-------segang314159';
+      var body='\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify(meta||{})+'\r\n--'+boundary+'\r\nContent-Type: application/json\r\nContent-Transfer-Encoding: base64\r\n\r\n'+b64+'\r\n--'+boundary+'--';
+      gapi.client.request({
+        path:fileId?'/upload/drive/v3/files/'+fileId+'?uploadType=multipart':'/upload/drive/v3/files?uploadType=multipart',
+        method:fileId?'PATCH':'POST',
+        headers:{'Content-Type':'multipart/related; boundary="'+boundary+'"'},body:body
+      }).then(res).catch(rej);
+    };
+    reader.onerror=rej;reader.readAsDataURL(blob);
+  });
+}
+
+function saveDataToDrive(){
+  if(!driveToken)return;
+  getOrCreateFolder().then(function(fid){
+    var blob=new Blob([JSON.stringify(state)],{type:'application/json'});
+    return gapi.client.drive.files.list({
+      q:"name='"+DATA_FILE+"' and '"+fid+"' in parents and trashed=false",fields:'files(id)'
+    }).then(function(res){
+      if(res.result.files.length)return uploadFile(blob,{},res.result.files[0].id);
+      return uploadFile(blob,{name:DATA_FILE,parents:[fid]},null);
+    });
+  }).catch(function(e){console.error('Drive save fail',e);});
+}
+
+function loadDataFromDrive(){
+  if(!driveToken)return;
+  getOrCreateFolder().then(function(fid){
+    return gapi.client.drive.files.list({
+      q:"name='"+DATA_FILE+"' and '"+fid+"' in parents and trashed=false",fields:'files(id)'
+    }).then(function(res){
+      if(!res.result.files.length){saveDataToDrive();return;}
+      return gapi.client.drive.files.get({fileId:res.result.files[0].id,alt:'media'}).then(function(fr){
+        var loaded=typeof fr.result==='string'?JSON.parse(fr.result):fr.result;
+        var lc=Object.values(state.meetings).filter(Array.isArray).reduce(function(s,m){return s+m.length;},0);
+        var dc=Object.values(loaded.meetings||{}).filter(Array.isArray).reduce(function(s,m){return s+m.length;},0);
+        if(dc>=lc){
+          Object.assign(state,loaded);migrate();
+          localStorage.setItem('segang_v1',JSON.stringify(state));
+          renderSb();updateCount();renderGlobalDash();
+          if(dc>0)showToast('Drive에서 데이터 복원\n미팅 '+dc+'건');
+        }
+      });
+    });
+  }).catch(function(e){console.error('Drive load fail',e);});
+}
+
+function syncMdToDrive(){
+  if(!driveToken){alert('Drive에 연결해주세요.');return;}
+  var c=state.companies.find(function(x){return x.id===state.selectedCoId;});
+  var sf=(c&&c.subfolders||[]).find(function(x){return x.id===state.selectedId;});
+  setDriveStatus('sync');
+  getOrCreateFolder().then(function(fid){
+    var targetId=fid;
+    var next=sf?gapi.client.drive.files.list({
+      q:"name='"+c.name+"' and mimeType='application/vnd.google-apps.folder' and '"+fid+"' in parents and trashed=false",fields:'files(id)'
+    }).then(function(r){
+      if(r.result.files.length)return r.result.files[0].id;
+      return gapi.client.drive.files.create({resource:{name:c.name,mimeType:'application/vnd.google-apps.folder',parents:[fid]},fields:'id'}).then(function(cr){return cr.result.id;});
+    }):Promise.resolve(fid);
+    return next.then(function(tid){
+      var fname=sf?c.name.replace(/\s/g,'_')+'_'+sf.name.replace(/\s/g,'_')+'_미팅기록.md':c.name.replace(/\s/g,'_')+'_미팅기록.md';
+      var md=genMd();
+      var blob=new Blob(['\uFEFF'+md],{type:'text/markdown;charset=utf-8'});
+      return gapi.client.drive.files.list({
+        q:"name='"+fname+"' and '"+tid+"' in parents and trashed=false",fields:'files(id)'
+      }).then(function(r){
+        if(r.result.files.length)return uploadFile(blob,{},r.result.files[0].id);
+        return uploadFile(blob,{name:fname,parents:[tid]},null);
+      }).then(function(){setDriveStatus('on');showToast('Drive 저장 완료!\n'+fname);});
+    });
+  }).catch(function(e){setDriveStatus('on');alert('Drive 저장 실패: '+e.message);});
+}
+
+window.addEventListener('load',function(){initDrive();});
+</script>
+</body>
+</html>
