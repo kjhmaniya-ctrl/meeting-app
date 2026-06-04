@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>세강스틸러스 미팅 관리</title>
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--bg:#0b0d12;--s1:#13151e;--s2:#1a1d28;--bd:#2a2f45;--ac:#4f8ef7;--ac2:#7c5cbf;--gn:#3ecf8e;--am:#f5a623;--rd:#f76f6f;--t1:#e8eaf0;--t2:#8b8fa8;--t3:#4a4f6a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans KR",sans-serif;background:var(--bg);color:var(--t1);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+header{padding:14px 24px;border-bottom:1px solid var(--bd);background:var(--s1);display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+.logo{width:30px;height:30px;background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+header h1{font-size:16px;font-weight:700}
+.hr{margin-left:auto;display:flex;align-items:center;gap:10px}
+.dbtn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:all .15s;font-family:inherit}
+.doff{border-color:var(--bd);color:var(--t2);background:var(--s2)}.doff:hover{border-color:var(--ac);color:var(--ac)}
+.don{border-color:rgba(62,207,142,.4);color:var(--gn);background:rgba(62,207,142,.08)}
+.dsyn{border-color:rgba(245,166,35,.4);color:var(--am);background:rgba(245,166,35,.08);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.layout{display:grid;grid-template-columns:260px 1fr;grid-template-rows:1fr;flex:1;overflow:hidden;height:calc(100vh - 57px)}
+.sidebar{background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.snav{display:flex;border-bottom:1px solid var(--bd)}
+.nb{flex:1;padding:10px 4px;border:none;background:none;color:var(--t1);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;border-bottom:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nb.on{color:var(--ac);border-bottom-color:var(--ac)}
+.nb:hover:not(.on){color:var(--t1);background:var(--s2)}
+.sbody{flex:1;min-height:0;overflow-y:auto;padding:8px;overscroll-behavior:contain}
+.crow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s;user-select:none}
+.crow:hover{background:var(--s2)}.crow.on{background:rgba(79,142,247,.1)}
+.xbtn{background:none;border:none;color:var(--t3);font-size:9px;cursor:pointer;padding:0 2px;transition:transform .2s;flex-shrink:0}
+.xbtn.open{transform:rotate(90deg)}
+.cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ci{flex:1;min-width:0}
+.cn{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm{font-size:11px;color:var(--t1);margin-top:1px}
+.ra{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.crow:hover .ra,.sfr:hover .ra{opacity:1}
+.ib{background:none;border:none;color:var(--t2);cursor:pointer;padding:3px 5px;border-radius:4px;font-size:12px;transition:all .15s}
+.ib:hover{color:var(--t1);background:var(--bd)}.ib.del:hover{color:var(--rd)}
+.sfl{padding-left:20px}
+.sfr{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:7px;cursor:pointer;transition:background .15s;margin-bottom:1px}
+.sfr:hover{background:var(--s2)}.sfr.on{background:rgba(79,142,247,.1)}
+.sfi{flex:1;min-width:0}
+.sfn{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sfm{font-size:10px;color:var(--t1)}
+.addb{width:100%;padding:8px 10px;border:1px dashed var(--bd);border-radius:7px;background:none;color:var(--t2);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px;margin-top:4px}
+.addb:hover{border-color:var(--ac);color:var(--ac)}
+.tsbx{padding:8px 10px;border-radius:8px;background:var(--s2);border:1px solid var(--bd);margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+.tsbx:hover{border-color:var(--t3)}
+.dd{font-size:10px;font-weight:700;font-family:"JetBrains Mono",monospace;padding:2px 6px;border-radius:4px;margin-bottom:4px;display:inline-block}
+.ddr{background:rgba(247,111,111,.15);color:var(--rd)}
+.dda{background:rgba(245,166,35,.15);color:var(--am)}
+.ddg{background:rgba(62,207,142,.15);color:var(--gn)}
+.ddx{background:var(--s2);color:var(--t3);border:1px solid var(--bd)}
+.ddo{background:rgba(247,111,111,.05);color:var(--t3)}
+.main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.home{flex:1;min-height:0;overflow:hidden;padding:20px 24px;display:flex;flex-direction:column;}
+#homeCols{flex:1;min-height:0;display:grid;grid-template-columns:1fr 280px;gap:16px;overflow:hidden;}
+.gst{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.gsc{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:10px 16px;font-size:12px;color:var(--t2);cursor:pointer;transition:border-color .15s}
+.gsc:hover{border-color:var(--t3)}
+.gsc span{font-weight:700;margin-left:4px}
+.tr{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);font-size:12px}
+.tr:last-child{border-bottom:none}
+.mh{padding:16px 24px;border-bottom:1px solid var(--bd);background:var(--s1);display:flex;align-items:center;gap:12px}
+.bc{display:flex;align-items:center;gap:6px;font-size:13px}
+.bco{color:var(--t2);cursor:pointer}.bco:hover{color:var(--ac)}
+.bcs{color:var(--t3)}.bcsb{font-weight:700;color:var(--t1)}
+.bcd{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tab{padding:6px 14px;border-radius:6px;border:none;background:none;color:var(--t1);cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;transition:all .15s}
+.tab.on{background:var(--ac);color:#fff}.tab:not(.on):hover{background:var(--s2);color:var(--t1)}
+.panel{flex:1;min-height:0;overflow-y:auto;padding:20px 24px}
+.dg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.dc{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:16px}
+.dl{font-size:11px;color:var(--t1);font-weight:600;margin-bottom:6px}
+.dv{font-size:28px;font-weight:700;font-family:"JetBrains Mono",monospace}
+.ds{font-size:11px;color:var(--t1);margin-top:2px}
+.stl{font-size:12px;font-weight:700;color:var(--t1);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
+.tc{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;transition:border-color .15s}
+.tc:hover{border-color:var(--t3)}.tc.done{opacity:.4}
+.tck{width:18px;height:18px;border-radius:5px;border:2px solid var(--bd);background:none;cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s}
+.tck.on{background:var(--gn);border-color:var(--gn);color:#fff}
+.tcc{flex:1;min-width:0}
+.tct{font-size:13px;font-weight:500;margin-bottom:4px}
+.tcm{font-size:11px;color:var(--t1);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.fs{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:20px;margin-bottom:16px}
+.fst{font-size:12px;font-weight:700;color:var(--t1);letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;font-weight:600;color:var(--t1)}
+.fi{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:9px 12px;color:var(--t1);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;width:100%}
+.fi:focus{border-color:var(--ac)}
+textarea.fi{resize:vertical;min-height:70px;line-height:1.6}
+.pp{display:flex;border:1px solid var(--bd);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.ps{flex:1;padding:12px 14px}
+.po{background:rgba(79,142,247,.04);border-right:1px solid var(--bd)}
+.pc{background:rgba(62,207,142,.04)}
+.ph{font-size:11px;font-weight:700;color:var(--t1);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.pb{width:6px;height:6px;border-radius:50%;background:var(--ac)}
+.pg{width:6px;height:6px;border-radius:50%;background:var(--gn)}
+.ptags{display:flex;flex-wrap:wrap;gap:5px;min-height:24px;margin-bottom:8px}
+.pt{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:500}
+.ptb{background:rgba(79,142,247,.12);color:var(--ac);border:1px solid rgba(79,142,247,.3)}
+.ptg{background:rgba(62,207,142,.12);color:var(--gn);border:1px solid rgba(62,207,142,.3)}
+.ptrm{background:none;border:none;cursor:pointer;color:inherit;opacity:.5;font-size:11px;padding:0}
+.ptam{background:rgba(245,166,35,.12);color:var(--am);border:1px solid rgba(245,166,35,.3)}
+.ptrm:hover{opacity:1}
+.pr{display:flex;gap:5px;flex-wrap:wrap}
+.pin{flex:1;min-width:100px;font-size:11px;padding:5px 8px}
+.qb{padding:4px 8px;border:1px solid rgba(79,142,247,.3);border-radius:5px;background:rgba(79,142,247,.08);color:var(--ac);font-size:10px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;transition:all .15s}
+.qb:hover{background:rgba(79,142,247,.18)}
+.til{display:flex;flex-direction:column;gap:8px}
+.tir{display:flex;gap:8px;align-items:center;background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:8px 12px}
+.tir input[type=text]{flex:1;background:none;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none}
+.tir input[type=text]::placeholder{color:var(--t2)}
+.di{background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:4px 8px;color:var(--t1);font-size:12px;font-family:inherit;outline:none}
+.di:focus{border-color:var(--ac)}
+.atb{padding:8px 14px;border:1px dashed var(--bd);border-radius:8px;background:none;color:var(--t2);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;width:100%;text-align:left;margin-top:4px}
+.atb:hover{border-color:var(--ac);color:var(--ac)}
+.ab{padding:10px 20px;border-radius:8px;border:none;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:7px}
+.bp{background:var(--ac);color:#fff}.bp:hover{opacity:.9}
+.bs{background:var(--s2);color:var(--t1);border:1px solid var(--bd)}.bs:hover{border-color:var(--ac);color:var(--ac)}
+.bg{background:var(--gn);color:#0a2418}.bg:hover{opacity:.9}
+.mc{background:var(--s2);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:12px;transition:border-color .15s}
+.mc:hover{border-color:var(--t3)}
+.mch{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.db{background:var(--s1);border:1px solid var(--bd);border-radius:5px;padding:3px 8px;font-size:11px;font-family:"JetBrains Mono",monospace;font-weight:600;color:var(--ac)}
+.tb{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.tbm{background:rgba(79,142,247,.12);color:var(--ac)}
+.tbc{background:rgba(62,207,142,.12);color:var(--gn)}
+.tbo{background:rgba(124,92,191,.12);color:var(--ac2)}
+.ch{color:var(--t1);font-size:13px;font-weight:700;transition:transform .2s}
+.ch.open{transform:rotate(180deg)}
+.mat{padding:7px 14px;border-bottom:1px solid var(--bd);display:flex;gap:16px;flex-wrap:wrap;background:var(--s1)}
+.mcb{padding:14px;border-top:1px solid var(--bd);display:none}
+.mcb.open{display:block}
+.fl{font-size:10px;font-weight:700;color:var(--t1);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.fv{font-size:13px;line-height:1.7;color:var(--t1);white-space:pre-wrap;margin-bottom:12px}
+.mti{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;background:var(--s1);margin-bottom:4px;font-size:12px}
+.lgit{padding:8px 10px;border-radius:7px;background:var(--s1);margin-bottom:4px;font-size:12px}
+.mdv{background:var(--s2);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.mdh{padding:10px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;background:var(--s1)}
+.mdf{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ac);flex:1}
+.mdb{padding:18px;font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.9;white-space:pre-wrap;color:var(--t1);max-height:500px;overflow-y:auto}
+.emp{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;color:var(--t1);gap:10px;text-align:center}
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100}
+.mov.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:26px;width:440px;max-width:92vw}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:5px}
+.modal p{font-size:13px;color:var(--t2);margin-bottom:18px}
+.mac{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.ftbs{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.ftb{padding:5px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--s2);color:var(--t2);font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+.ftb.on{border-color:var(--ac);background:rgba(79,142,247,.1);color:var(--ac)}
+.or{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;transition:border-color .15s;margin-bottom:8px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+.fr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mt12{margin-top:12px}
+/* 사유 입력 박스 */
+.reason-box{background:rgba(79,142,247,.05);border:1px solid rgba(79,142,247,.2);border-radius:8px;padding:12px;margin-top:10px}
+.reason-lbl{font-size:11px;font-weight:700;color:var(--ac);margin-bottom:6px;letter-spacing:.3px}
+/* 세강스틸러스 뷰 */
+.sek-view{flex:1;overflow-y:auto;padding:24px}
+.int-card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;transition:border-color .15s}
+.int-card:hover{border-color:var(--t3)}.int-card.done{opacity:.45}
+.int-body{flex:1;min-width:0}
+.int-title{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:5px}
+.int-meta{font-size:11px;color:var(--t1);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.int-done-memo{font-size:11px;color:var(--gn);margin-top:5px}
+.sec-label{font-size:12px;font-weight:700;color:var(--t1);letter-spacing:.8px;margin:16px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
+
+/* ===== 프로젝트 홈 ===== */
+.proj-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.proj-tab{padding:6px 16px;border-radius:20px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.proj-tab.on{color:#fff}
+.proj-tab[data-st="진행중"].on{background:#5b9cf6;border-color:#5b9cf6}
+.proj-tab[data-st="납품중"].on{background:var(--ac2);border-color:var(--ac2)}
+.proj-tab[data-st="적용"].on{background:var(--gn);border-color:var(--gn);color:#0a2418}
+.proj-tab[data-st="미적용"].on{background:var(--rd);border-color:var(--rd)}
+.proj-tab[data-st="all"].on{background:var(--bd);border-color:var(--bd)}
+.proj-card{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--s2);border:1px solid var(--bd);margin-bottom:7px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.proj-card-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.proj-co-chips{display:flex;flex-wrap:wrap;gap:4px}
+.proj-co-chip{font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;cursor:pointer;transition:opacity .15s;border:1px solid}
+.proj-co-chip:hover{opacity:.75}
+.proj-card:hover{border-color:var(--t3);box-shadow:0 2px 8px rgba(0,0,0,.22)}
+.proj-name{flex:1;font-size:13px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-cnt{font-size:11px;color:var(--t1);flex-shrink:0}
+.st-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;cursor:pointer;flex-shrink:0;border:none;font-family:inherit;transition:opacity .15s}
+.st-badge:hover{opacity:.75}
+.st-진행중{background:rgba(91,156,246,.15);color:#5b9cf6;border:1px solid rgba(91,156,246,.4)}
+.st-납품중{background:rgba(124,92,191,.15);color:var(--ac2);border:1px solid rgba(124,92,191,.4)}
+.st-적용{background:rgba(62,207,142,.15);color:var(--gn);border:1px solid rgba(62,207,142,.4)}
+.st-미적용{background:rgba(247,111,111,.15);color:var(--rd);border:1px solid rgba(247,111,111,.4)}
+/* 프로젝트 미팅이력 뷰 */
+.proj-hist-view{flex:1;min-height:0;overflow-y:auto;padding:0 24px 20px}
+.proj-hist-co-hd{display:flex;align-items:center;gap:8px;padding:10px 14px 9px;font-size:13px;font-weight:700;position:sticky;top:0;z-index:1}
+/* 상태 선택 드롭다운 */
+.st-menu{position:fixed;background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:4px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:110px}
+.st-opt{padding:7px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .1s}
+.st-opt:hover{background:var(--s2)}
+
+/* ===== 모바일 최적화 ===== */
+#mobToggleBtn{display:none;}
+@media(max-width:768px){
+  /* 헤더 */
+  header{padding:9px 14px;}
+  header h1{font-size:13px;}
+  #totCnt{display:none;}
+
+  /* 레이아웃: 세로 스택 */
+  .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:calc(100vh - 44px);}
+
+  /* 사이드바 → 검색 전용 가로 바 */
+  .sidebar{flex-direction:row;align-items:center;border-right:none;border-bottom:1px solid var(--bd);position:relative;z-index:20;}
+  .snav{display:none;}
+  .sbody{display:none;position:absolute;top:100%;left:0;right:0;background:var(--s1);border:1px solid var(--bd);border-top:none;border-radius:0 0 10px 10px;max-height:240px;overflow-y:auto;z-index:30;flex:unset;}
+  .sbody.mob-open{display:block;}
+  #coSearchIn{font-size:13px;padding:7px 10px;}
+  #mobToggleBtn{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:36px;margin-right:6px;border:1px solid var(--bd);border-radius:8px;background:var(--s1);color:var(--t2);font-size:14px;cursor:pointer;}
+
+  /* 메인 */
+  .main{overflow:hidden;}
+  .home{padding:12px 14px;overflow-y:auto;}
+
+  /* 통계 카드 2×2 */
+  .gst{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+  .gsc{padding:9px 12px;font-size:11px;}
+
+  /* 통계 상세 */
+  #statDetailList{max-height:200px;}
+
+  /* 사이드바 드롭다운 클리핑 해제 + 검색창 너비 + 버튼 숨김 */
+  .sidebar{overflow:visible;}
+  #coSearchWrap{flex:1;}
+  #addCoBtnWrap{display:none;}
+
+  /* 대시보드: 프로젝트 리스트 + 세강 지시사항 */
+  .home{padding:12px 14px;overflow:hidden;display:flex;flex-direction:column;}
+  #homeCols{display:flex !important;flex-direction:column;flex:1;min-height:0;gap:0;overflow:hidden;}
+  #homeCols>div:first-child{display:flex !important;flex-direction:column;flex:1;min-height:0;overflow:hidden;padding-bottom:4px;}
+  #gIntPanel{display:flex !important;flex-direction:column !important;flex:1;min-height:0;border-left:none !important;padding-left:0 !important;overflow:hidden !important;border-top:1px solid var(--bd);padding-top:6px;}
+  /* 통계 상세 패널 모바일 최소화 */
+  #statDetailList{max-height:220px;}
+
+  /* 대시보드 검색 행: 가로 유지 (세로 공간 절약) */
+  .dash-search-row{flex-direction:row !important;align-items:center !important;gap:6px !important;flex-wrap:nowrap !important;flex-shrink:0;}
+  #dashSearchIn{width:auto !important;flex:1;}
+
+  /* 업체 상세뷰 헤더: 브레드크럼+탭 세로 정렬 */
+  .mh{flex-wrap:wrap;padding:10px 14px;gap:8px;}
+  .tabs{margin-left:0;flex-wrap:wrap;}
+  .tab{padding:5px 10px;font-size:12px;}
+  .panel{padding:14px;}
+
+  /* 모달 */
+  .modal{width:92vw;padding:18px;}
+
+  /* 폼 2컬럼 → 1컬럼 */
+  .fg2{grid-template-columns:1fr;}
+
+  /* 참석자 구분 박스 */
+  .pp{flex-direction:column;}
+  .po{border-right:none;border-bottom:1px solid var(--bd);}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">&#128203;</div>
+  <h1 style="cursor:pointer" onclick="location.reload()">세강스틸러스 미팅 관리</h1>
+  <div class="hr">
+    <button class="dbtn doff" id="driveBtn" data-state="off"><span id="dIco">&#9729;</span><span id="dLbl">Drive 연결</span></button>
+    <span id="totCnt" style="font-size:12px;color:var(--t1)">총 0건</span>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="snav">
+      <button class="nb on" id="nCo">&#127970; 업체</button>
+      <button class="nb" id="nSek">&#127970; 세강</button>
+    </div>
+    <div id="coSearchWrap" style="padding:6px 8px;border-bottom:1px solid var(--bd)">
+      <input type="text" class="fi" id="coSearchIn" placeholder="🔍 업체 검색" style="font-size:12px;padding:6px 10px">
+    </div>
+    <button id="mobToggleBtn">▼</button>
+    <div class="sbody" id="sbody"></div>
+    <div id="addCoBtnWrap" style="padding:8px"><button class="addb" id="addCoBtn">+ 새 업체 추가</button></div>
+  </aside>
+  <main class="main">
+    <!-- 홈 뷰 -->
+    <div class="home" id="homeView">
+      <!-- 상단 요약 + 탭 -->
+      <div style="flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:nowrap">
+          <div class="gsc" onclick="showStatDetail('all')" style="flex-shrink:0;white-space:nowrap">전체 미팅 <span id="gTot" style="color:var(--t1);text-decoration:underline">0</span>건</div>
+          <input type="text" class="fi" id="projSearchIn" placeholder="🔍 프로젝트 검색" oninput="projSearch=this.value.trim();rProjHome()" style="flex:1;min-width:0;font-size:12px;padding:6px 12px;border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.05)">
+          <!-- 숨김: 기존 통계용 span 유지 (rGDash 참조) -->
+          <span id="gMon" style="display:none">0</span>
+          <span id="gUrg" style="display:none">0</span>
+          <span id="gNoDt" style="display:none">0</span>
+        </div>
+        <!-- 프로젝트 상태 탭 (숫자는 JS rProjTabs()가 렌더링) -->
+        <div class="proj-tabs" id="projTabs"></div>
+      </div>
+      <!-- 통계 상세 패널 (전체미팅 클릭시) -->
+      <div id="statDetail" style="display:none;background:var(--s2);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden;flex-shrink:0">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+          <span id="statDetailTitle" style="font-size:13px;font-weight:600"></span>
+          <button onclick="document.getElementById('statDetail').style.display='none'" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:16px">x</button>
+        </div>
+        <div id="statDetailSearch" style="display:none;padding:8px 14px;border-bottom:1px solid var(--bd)">
+          <input id="statDetailSearchIn" type="text" placeholder="논의사항·프로젝트·업체 검색..." oninput="filterStatDetail(this.value)" style="width:100%;box-sizing:border-box;padding:6px 10px;border-radius:8px;border:1px solid rgba(79,142,247,.4);background:rgba(79,142,247,.05);font-size:12px;color:var(--t1);outline:none">
+        </div>
+        <div id="statDetailList" style="padding:12px 14px;max-height:300px;overflow-y:auto"></div>
+      </div>
+      <!-- 메인 콘텐츠 (프로젝트 리스트 + 세강 지시사항) -->
+      <div id="homeCols">
+        <!-- 왼쪽: 프로젝트 리스트 -->
+        <div style="display:flex;flex-direction:column;min-height:0;overflow:hidden">
+          <div id="projList" style="overflow-y:auto;flex:1;min-height:0"></div>
+          <div id="gEmp" style="display:none;padding:40px;text-align:center;color:var(--t1);font-size:13px">
+            <div style="font-size:36px;opacity:.3;margin-bottom:8px">📋</div>
+            <div>등록된 프로젝트가 없습니다</div>
+            <div style="font-size:12px;margin-top:4px">미팅 저장 시 프로젝트를 태그하면 자동으로 등록됩니다</div>
+          </div>
+        </div>
+        <!-- 오른쪽: 세강 지시사항 -->
+        <div id="gIntPanel" style="display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--bd);padding-left:16px;overflow:hidden">
+          <div style="display:flex;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bd)"><span style="font-size:12px;font-weight:700;color:var(--t1);letter-spacing:.8px;text-transform:uppercase;flex:1">&#127970; 세강 지시사항</span><button class="ab bp" onclick="openAddInt()" style="padding:3px 10px;font-size:11px;border-radius:8px">+ 추가</button></div>
+          <div id="gIntList" style="overflow-y:auto;flex:1;min-height:0"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 프로젝트 미팅이력 뷰 -->
+    <div id="projHistView" style="display:none;flex-direction:column;height:100%">
+      <div class="mh">
+        <div class="bc">
+          <span class="bco" onclick="showHome()" style="cursor:pointer">🏠 홈</span>
+          <span class="bcs">&rsaquo;</span>
+          <span id="projHistName" class="bcsb"></span>
+          <span id="projHistBadge" style="margin-left:8px"></span>
+        </div>
+      </div>
+      <div class="proj-hist-view" id="projHistList"></div>
+    </div>
+    <!-- 업체 상세 뷰 -->
+    <div id="mainView" style="display:none;flex-direction:column;height:100%">
+      <div class="mh">
+        <div class="bc">
+          <div class="bcd" id="hDot"></div>
+          <span class="bco" id="hCo"></span>
+          <span class="bcs" id="hSep" style="display:none">&rsaquo;</span>
+          <span class="bcsb" id="hSub"></span>
+        </div>
+        <div class="tabs">
+          <button class="tab on" id="tabDashBtn">&#128202; 대시보드</button>
+          <button class="tab" id="tabNewBtn">&#9998; 새 미팅</button>
+          <button class="tab" id="tabHistBtn">&#128203; 이력</button>
+          <button class="tab" id="tabMdBtn">&#128196; MD</button>
+        </div>
+      </div>
+      <div class="panel" id="pDash">
+        <div class="dg">
+          <div class="dc"><div class="dl">전체 미팅</div><div class="dv" id="dTot">0</div><div class="ds">건</div></div>
+          <div class="dc"><div class="dl">이번달 할 일</div><div class="dv" id="dMon" style="color:var(--am)">0</div><div class="ds">건</div></div>
+          <div class="dc"><div class="dl">긴급 (3일 이내)</div><div class="dv" id="dUrg" style="color:var(--rd)">0</div><div class="ds">건</div></div>
+        </div>
+        <div class="stl">후속조치 현황</div>
+        <div id="dashTd"></div>
+      </div>
+      <div class="panel" id="pNew" style="display:none">
+        <div class="fs"><div class="fst">기본 정보</div>
+          <div class="fg2">
+            <div class="fg"><label>미팅 날짜</label><input type="date" class="fi" id="metaDate"></div>
+            <div class="fg"><label>미팅 유형</label><select class="fi" id="metaType"><option value="meeting">대면 미팅</option><option value="call">통화</option><option value="online">온라인 미팅</option></select></div>
+          </div>
+        </div>
+        <div class="fs"><div class="fst">참석자</div>
+          <div class="pp">
+            <div class="ps po"><div class="ph"><div class="pb"></div>세강스틸러스</div><div class="ptags" id="ourTags"></div>
+              <div class="pr"><input type="text" class="fi pin" id="ourIn" placeholder="이름 입력 후 Enter"><button class="qb" id="qbOur1">이동현 상무</button><button class="qb" id="qbOur2">최정규 부장</button></div>
+              <div id="prevOurWrap" style="display:none;margin-top:6px"><div style="font-size:10px;color:var(--t1);margin-bottom:4px">이전 참석자</div><div id="prevOur" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>
+            </div>
+            <div class="ps pc"><div class="ph"><div class="pg"></div>거래처 <span id="clLbl" style="color:var(--t1);font-size:10px;margin-left:3px"></span></div><div class="ptags" id="clientTags"></div>
+              <div class="pr"><input type="text" class="fi pin" id="clientIn" placeholder="이름/직책 입력 후 Enter"></div>
+              <div id="prevClientWrap" style="display:none;margin-top:6px"><div style="font-size:10px;color:var(--t1);margin-bottom:4px">이전 참석자</div><div id="prevClient" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="fs"><div class="fst">프로젝트</div>
+          <div class="ptags" id="projTags" style="margin-bottom:8px"></div>
+          <div class="pr"><input type="text" class="fi pin" id="projIn" placeholder="프로젝트명 입력 후 Enter"></div>
+          <div id="prevProjWrap" style="display:none;margin-top:8px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><span style="font-size:10px;color:var(--t1)">이전 프로젝트 (클릭하여 추가)</span><button type="button" id="allProjBtn" onclick="rAllProjPanel()" style="font-size:10px;padding:2px 8px;border-radius:99px;border:1px solid var(--am);background:rgba(245,166,35,0.12);color:var(--am);cursor:pointer;font-weight:600">전체 ▾</button></div><div id="prevProj" style="display:flex;flex-wrap:wrap;gap:5px"></div><div id="allProjPanel" style="display:none;margin-top:6px;max-height:160px;overflow-y:auto;border:1px solid var(--bd);border-radius:8px;padding:4px;background:var(--s1)"></div></div>
+        </div>
+        <div class="fs"><div class="fst">미팅 내용</div>
+          <div class="fg" style="margin-bottom:12px"><label>주요 논의사항</label><textarea class="fi" id="fDisc" rows="4" placeholder="- 항목별로 입력"></textarea></div>
+          <div class="fg" style="margin-bottom:12px"><label>결정된 사항</label><textarea class="fi" id="fDec" rows="3" placeholder="- 이번 미팅에서 결정된 사항"></textarea></div>
+          <div class="fg"><label>특이사항 / 메모</label><textarea class="fi" id="fMemo" rows="2" placeholder="기타 메모"></textarea></div>
+        </div>
+        <div class="fs"><div class="fst">후속조치 / 할 일</div><div class="til" id="tiList"></div><button class="atb" id="addTiBtn">+ 후속조치 추가</button></div>
+        <div class="fr mt12"><button class="ab bg" id="saveBtn">저장</button><button class="ab bs" id="resetBtn">초기화</button></div>
+      </div>
+      <div class="panel" id="pHist" style="display:none">
+        <div id="histList"></div>
+        <div class="emp" id="histEmp" style="display:none"><div style="font-size:40px;opacity:.4">&#128237;</div><div style="font-size:14px;color:var(--t2)">미팅 기록이 없습니다</div></div>
+      </div>
+      <div class="panel" id="pMd" style="display:none">
+        <div class="mdv"><div class="mdh"><span>&#128196;</span><span class="mdf" id="mdFn"></span>
+          <button class="ab bs" id="dlMdBtn" style="padding:5px 10px;font-size:11px">다운로드</button>
+          <button class="ab bs" id="syncMdBtn" style="padding:5px 10px;font-size:11px;color:var(--ac);border-color:rgba(79,142,247,.3)">Drive 저장</button>
+        </div><div class="mdb" id="mdBody"></div></div>
+      </div>
+    </div>
+    <!-- 세강스틸러스 내부 지시사항 뷰 -->
+    <div class="sek-view" id="sekView" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div><div style="font-size:18px;font-weight:700;margin-bottom:4px">&#127970; 세강스틸러스 지시사항</div><div style="font-size:12px;color:var(--t1)">상급자 지시 및 내부 업무 관리</div></div>
+        <button class="ab bp" id="addIntBtn" style="padding:8px 16px">+ 지시사항 추가</button>
+      </div>
+      <div class="dg" id="sekStats" style="margin-bottom:20px"></div>
+      <div class="sec-label" style="margin-top:0">진행 중</div>
+      <div id="sekPending"></div>
+      <div class="sec-label">완료됨</div>
+      <div id="sekDone"></div>
+    </div>
+  </main>
+</div>
+
+<!-- 새 업체 추가 -->
+<div class="mov" id="addCoMov"><div class="modal"><h3>새 업체 추가</h3><p>업체명을 입력하세요</p>
+  <div class="fg" style="margin-bottom:14px"><label>업체명</label><input type="text" class="fi" id="newCoName" placeholder="예: GS건설"></div>
+  <div class="mac"><button class="ab bs" id="addCoCancelBtn">취소</button><button class="ab bp" id="addCoConfirmBtn">추가</button></div>
+</div></div>
+
+<!-- 하위 폴더 추가 -->
+<div class="mov" id="addSfMov"><div class="modal"><h3>하위 폴더 추가</h3><p id="sfDesc"></p>
+  <div class="fg" style="margin-bottom:10px"><label>폴더 유형</label><div class="ftbs"><button class="ftb on" data-ft="dept">본사/부서</button><button class="ftb" data-ft="site">현장</button><button class="ftb" data-ft="office">사무소</button><button class="ftb" data-ft="other">기타</button></div></div>
+  <div class="fg" style="margin-bottom:14px"><label>폴더명</label><input type="text" class="fi" id="newSfName" placeholder="예: 본사 구매부"></div>
+  <div class="mac"><button class="ab bs" id="addSfCancelBtn">취소</button><button class="ab bp" id="addSfConfirmBtn">추가</button></div>
+</div></div>
+
+<!-- 후속조치 완료/연기 모달 -->
+<div class="mov" id="todoMov"><div class="modal" style="width:460px"><h3>후속조치 처리</h3>
+  <input type="text" class="fi" id="tdMTitle" placeholder="후속조치 제목" style="font-size:14px;font-weight:500;margin-bottom:8px;padding:7px 10px">
+  <p style="margin-bottom:14px">어떻게 처리하시겠어요?</p>
+  <div class="or" id="optCom"><input type="radio" name="topt" value="complete" style="margin-top:2px;accent-color:var(--gn)"><div><div style="font-size:13px;font-weight:600;color:var(--gn)">완료 처리</div><div style="font-size:12px;color:var(--t1);margin-top:3px">진행사항을 기록하고 완료로 표시합니다</div></div></div>
+  <div class="or" id="optPost"><input type="radio" name="topt" value="postpone" style="margin-top:2px;accent-color:var(--am)"><div><div style="font-size:13px;font-weight:600;color:var(--am)">일정 연기</div><div style="font-size:12px;color:var(--t1);margin-top:3px">새 날짜를 입력하면 대시보드에 다시 표시됩니다</div></div></div>
+  <div id="comFlds" style="display:none">
+    <div class="fg2" style="margin-bottom:8px">
+      <div class="fg"><label style="font-size:11px;font-weight:600;color:var(--t1)">날짜</label><input type="date" class="fi" id="comContactDate"></div>
+      <div class="fg"><label style="font-size:11px;font-weight:600;color:var(--t1)">유형</label>
+        <select class="fi" id="comContactType"><option value="call">📞 통화</option><option value="meeting">🤝 대면 미팅</option><option value="online">💻 온라인 미팅</option><option value="other">기타</option></select>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:8px"><label style="font-size:11px;font-weight:600;color:var(--t1)">상대방 (누구와)</label><input type="text" class="fi" id="comContactWith" placeholder="예: 홍길동 과장, 구매팀 담당자"><div id="comContactSug" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px"></div></div>
+    <div class="reason-box"><div class="reason-lbl">✏️ 완료 사유 / 처리 내용</div><textarea class="fi" id="comMemo" rows="2" placeholder="예: 조건 협의 완료, 계약서 검토 완료 등"></textarea></div>
+  </div>
+  <div id="postFlds" style="display:none">
+    <div class="fg2" style="margin-bottom:8px">
+      <div class="fg"><label style="font-size:11px;font-weight:600;color:var(--t1)">확인한 날짜</label><input type="date" class="fi" id="postContactDate"></div>
+      <div class="fg"><label style="font-size:11px;font-weight:600;color:var(--t1)">유형</label>
+        <select class="fi" id="postContactType"><option value="call">📞 통화</option><option value="meeting">🤝 대면 미팅</option><option value="online">💻 온라인 미팅</option><option value="other">기타</option></select>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:8px"><label style="font-size:11px;font-weight:600;color:var(--t1)">상대방 (누구와)</label><input type="text" class="fi" id="postContactWith" placeholder="예: 홍길동 과장, 구매팀 담당자"><div id="postContactSug" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px"></div></div>
+    <div class="fg2" style="margin-bottom:8px">
+      <div class="fg"><label style="font-size:11px;font-weight:600;color:var(--t1)">새 예정 날짜</label><input type="date" class="fi" id="postDate"></div>
+      <div class="fg"><label style="font-size:11px;font-weight:600;color:var(--t1)">연기 사유</label><input type="text" class="fi" id="postReason" placeholder="예: 입찰 연기, 담당자 부재"></div>
+    </div>
+    <div class="reason-box"><div class="reason-lbl">📝 상세 메모 (선택)</div><textarea class="fi" id="postMemo" rows="2" placeholder="추가 설명을 입력하세요"></textarea></div>
+  </div>
+  <div class="mac"><button class="ab bs" id="tdCancelBtn">취소</button><button class="ab bp" id="tdConfBtn" disabled>확인</button></div>
+</div></div>
+
+<!-- 미팅 편집 -->
+<div class="mov" id="editMov"><div class="modal" style="width:560px;max-height:90vh;overflow-y:auto"><h3>미팅 편집</h3><p style="margin-bottom:16px">내용을 수정하고 저장하세요</p>
+  <div class="fg2" style="margin-bottom:12px">
+    <div class="fg"><label>미팅 날짜</label><input type="date" class="fi" id="editDate"></div>
+    <div class="fg"><label>미팅 유형</label><select class="fi" id="editType"><option value="meeting">대면 미팅</option><option value="call">통화</option><option value="online">온라인 미팅</option><option value="other">기타</option></select></div>
+  </div>
+  <div class="fg" style="margin-bottom:8px"><label>세강스틸러스 참석자</label><div class="ptags" id="editOurTags" style="margin-bottom:6px"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><input type="text" class="fi" id="editOurIn" placeholder="이름 입력 후 Enter" style="flex:1;min-width:120px"><button class="qb" id="editQb1">이동현 상무</button><button class="qb" id="editQb2">최정규 부장</button></div>
+  </div>
+  <div class="fg" style="margin-bottom:12px"><label>거래처 참석자</label><div class="ptags" id="editClientTags" style="margin-bottom:6px"></div><input type="text" class="fi" id="editClientIn" placeholder="이름/직책 입력 후 Enter"></div>
+  <div class="fg" style="margin-bottom:12px"><label>프로젝트</label><div class="ptags" id="editProjTags" style="margin-bottom:6px"></div><input type="text" class="fi" id="editProjIn" placeholder="프로젝트명 입력 후 Enter">
+    <div id="editPrevProjWrap" style="display:none;margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:10px;color:var(--t1)">이전 프로젝트 (클릭하여 추가)</span>
+        <button id="editAllProjBtn" onclick="rEditAllProjPanel()" style="font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--am);background:rgba(245,166,35,0.12);color:var(--am);cursor:pointer;font-weight:600">전체 ▾</button>
+      </div>
+      <div id="editPrevProj" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+      <div id="editAllProjPanel" style="display:none;margin-top:8px;max-height:120px;overflow-y:auto;border:1px solid var(--bd);border-radius:8px;padding:8px;background:var(--s1)"></div>
+    </div>
+  </div>
+  <div class="fg" style="margin-bottom:10px"><label>주요 논의사항</label><textarea class="fi" id="editDisc" rows="4"></textarea></div>
+  <div class="fg" style="margin-bottom:10px"><label>결정된 사항</label><textarea class="fi" id="editDec" rows="3"></textarea></div>
+  <div class="fg" style="margin-bottom:12px"><label>특이사항 / 메모</label><textarea class="fi" id="editMemo" rows="2"></textarea></div>
+  <div class="fg" style="margin-bottom:14px">
+    <label style="display:flex;align-items:center;justify-content:space-between">
+      <span>후속조치</span>
+      <button id="editAddTodoBtn" style="font-size:11px;padding:3px 10px;border-radius:99px;border:1px solid var(--ac);background:rgba(79,142,247,.08);color:var(--ac);cursor:pointer">+ 추가</button>
+    </label>
+    <div id="editTodoList" style="margin-top:8px;display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+  <div class="mac"><button class="ab bs" id="editCancelBtn">취소</button><button class="ab bp" id="editSaveBtn">저장</button></div>
+</div></div>
+
+<!-- 지시사항 추가 모달 -->
+<div class="mov" id="addIntMov"><div class="modal" style="width:480px"><h3 id="intMovTitle">지시사항 추가</h3><p id="intMovDesc" style="margin-bottom:16px">상급자 지시 또는 내부 업무를 등록하세요</p>
+  <div class="fg2" style="margin-bottom:12px">
+    <div class="fg"><label>지시자 (상급자)</label><input type="text" class="fi" id="intFrom" placeholder="예: 이종권 대표">
+      <div style="display:flex;gap:4px;margin-top:4px"><button class="qb" id="qbFrom1">이종권 대표</button><button class="qb" id="qbFrom2">이동현 상무</button></div>
+    </div>
+    <div class="fg"><label>지시일</label><input type="date" class="fi" id="intCreated"></div>
+  </div>
+  <div class="fg" style="margin-bottom:12px"><label>지시 내용 <span style="color:var(--rd)">*</span></label><textarea class="fi" id="intText" rows="3" placeholder="지시사항 내용을 입력하세요"></textarea></div>
+  <div class="fg" style="margin-bottom:14px"><label>완료 기한 (선택)</label><input type="date" class="fi" id="intDue"></div>
+  <div class="mac"><button class="ab bs" id="addIntCancelBtn">취소</button><button class="ab bp" id="addIntConfirmBtn">추가</button></div>
+</div></div>
+
+<!-- 지시사항 완료 처리 모달 -->
+<div class="mov" id="intDoneMov"><div class="modal"><h3>완료 처리</h3>
+  <p id="intDoneTitle" style="color:var(--t1);font-weight:500;font-size:14px;margin-bottom:16px"></p>
+  <div class="reason-box" style="margin-bottom:14px"><div class="reason-lbl">✏️ 완료 사유 / 처리 내용</div><textarea class="fi" id="intDoneMemo" rows="3" placeholder="예: 보고 완료, 자료 제출 완료 등"></textarea></div>
+  <div class="mac"><button class="ab bs" id="intDoneCancelBtn">취소</button><button class="ab bg" id="intDoneConfirmBtn">완료 처리</button></div>
+</div></div>
+
+<div id="toast" style="display:none;position:fixed;bottom:24px;right:24px;background:var(--s1);border:1px solid var(--gn);color:var(--t1);padding:12px 16px;border-radius:10px;font-size:13px;line-height:1.6;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:999;white-space:pre-line;max-width:280px;transition:opacity .3s"></div>
+<script>
+var PAL=['#4f8ef7','#3ecf8e','#f5a623','#f76f6f','#a78bfa','#fb7185','#34d399','#60a5fa'];
+var FI={dept:'[본사]',site:'[현장]',office:'[사무소]',other:'[기타]'};
+var TM={meeting:'대면 미팅',call:'통화',online:'온라인 미팅',other:'기타'};
+var S={companies:[],meetings:{},selId:null,selCoId:null,exp:{},internal:[]};
+var pts={our:[],client:[]};
+var tis=[];
+var sfTgt=null,sfType='dept';
+var tdTgt=null,tdOpt=null;
+var curNav='co';
+var coSearch='';
+var dashSearch='';
+var intDoneTgt=null;
+var editIntTgt=null;
+var editTgt=null,editPts={our:[],client:[]};
+var projs=[];
+var editProjs=[];
+var editTodos=[];
+var curProjTab='진행중';
+var stMenu=null;
+var projSearch='';
+
+function save(){localStorage.setItem('segang_v1',JSON.stringify(S));if(drTok)saveDrData();}
+function load(){
+  try{
+    var d=localStorage.getItem('segang_v1');
+    if(d){S=JSON.parse(d);mig();return;}
+    var old=localStorage.getItem('meeting_app_v2');
+    if(old){var p=JSON.parse(old);S.companies=p.companies||[];S.meetings=p.meetings||{};S.exp=p.expandedCompanies||{};
+      Object.values(S.meetings).forEach(function(ml){if(!Array.isArray(ml))return;ml.forEach(function(m){if(!m.discussion&&m.transcript)m.discussion=m.transcript;if(!m.decision&&m.summary)m.decision=m.summary;if(!m.todos)m.todos=[];if(!m.followupLog)m.followupLog=[];});});
+      mig();localStorage.setItem('segang_v1',JSON.stringify(S));toast('이전 미팅 기록을 복원했어요!');}}catch(e){}mig();}
+function mig(){
+  if(!Array.isArray(S.companies))S.companies=[];
+  if(!S.meetings||typeof S.meetings!=='object')S.meetings={};
+  if(!S.exp)S.exp={};
+  if(!Array.isArray(S.internal))S.internal=[];
+  S.companies.forEach(function(c){if(!Array.isArray(c.subfolders))c.subfolders=[];if(!Array.isArray(S.meetings[c.id]))S.meetings[c.id]=[];c.subfolders.forEach(function(sf){if(!Array.isArray(S.meetings[sf.id]))S.meetings[sf.id]=[];});});
+  var ids={};S.companies.forEach(function(c){ids[c.id]=1;(c.subfolders||[]).forEach(function(sf){ids[sf.id]=1;});});
+  if(S.selId&&!ids[S.selId]){S.selId=null;S.selCoId=null;}
+  Object.values(S.meetings).forEach(function(ml){if(!Array.isArray(ml))return;ml.forEach(function(m){if(!m.projects)m.projects=[];});});
+  if(!Array.isArray(S.projects))S.projects=[];
+  Object.values(S.meetings).forEach(function(ml){if(!Array.isArray(ml))return;ml.forEach(function(m){(m.projects||[]).forEach(function(p){if(p&&!S.projects.includes(p))S.projects.push(p);});});});
+  if(!S.projectMeta||typeof S.projectMeta!=='object')S.projectMeta={};
+  var migDone=false;
+  Object.keys(S.meetings).forEach(function(vId){
+    (S.meetings[vId]||[]).forEach(function(m){
+      (m.followupLog||[]).forEach(function(log){
+        if(log.mId)return;
+        var pre=log.type==='complete'?'[후속조치 완료]':'[일정 연기]';
+        var disc=pre+' '+log.todoText+(log.memo?'\n\n처리 내용: '+log.memo:'');
+        var nm={id:'mmig_'+log.id,date:log.contactDate||log.date||(new Date().toISOString().split('T')[0]),type:log.contactType||'other',attendeesOur:[],attendeesClient:log.contactWith?[log.contactWith]:[],projects:[],discussion:disc,decision:'',memo:'',todos:[],followupLog:[],createdAt:log.date||new Date().toISOString()};
+        log.mId=nm.id;
+        S.meetings[vId].push(nm);
+        migDone=true;
+      });
+    });
+  });
+  if(migDone){S.meetings&&Object.keys(S.meetings).forEach(function(vId){if(Array.isArray(S.meetings[vId]))S.meetings[vId].sort(function(a,b){return a.date.localeCompare(b.date);});});localStorage.setItem('segang_v1',JSON.stringify(S));}
+  var tidMig=false;Object.keys(S.meetings).forEach(function(vId){(S.meetings[vId]||[]).forEach(function(m){(m.followupLog||[]).forEach(function(log){if(!log.todoId&&log.todoText){var td=(m.todos||[]).find(function(t){return t.text===log.todoText;});if(td){log.todoId=td.id;tidMig=true;}}});});});if(tidMig)localStorage.setItem('segang_v1',JSON.stringify(S));}
+
+document.addEventListener('DOMContentLoaded',function(){
+  load();
+  var d=document.getElementById('metaDate');if(d)d.value=td();
+  setupEvents();rSb();updCnt();addTI();rGDash();initDr();
+  /* 초기 state 등록 */
+  history.replaceState({page:'home'},'','');
+  /* 뒤로가기 처리 */
+  window.addEventListener('popstate',function(e){
+    var st=e.state;
+    if(!st){showHome(true);return;}
+    if(st.page==='home'){showHome(true);}
+    else if(st.page==='projHist'){showProjHist(st.projName,true);}
+    else if(st.page==='main'){
+      var c=S.companies.find(function(x){return x.id===st.cId;});
+      if(c){selV(st.vId,st.cId,true);switchTab(st.tab||'dash',true);}
+      else{showHome(true);}
+    }
+  });
+});
+function td(){return new Date().toISOString().split('T')[0];}
+
+function setupEvents(){
+  document.getElementById('driveBtn').addEventListener('click',handleDriveAuth);
+  document.getElementById('coSearchIn').addEventListener('input',function(){coSearch=this.value.trim();rSb();});
+  document.getElementById('nCo').addEventListener('click',function(){switchNav('co');});
+  document.getElementById('nSek').addEventListener('click',function(){switchNav('sek');});
+  document.getElementById('addCoBtn').addEventListener('click',openAddCo);
+  document.getElementById('tabDashBtn').addEventListener('click',function(){switchTab('dash');});
+  document.getElementById('tabNewBtn').addEventListener('click',function(){switchTab('new');});
+  document.getElementById('tabHistBtn').addEventListener('click',function(){switchTab('hist');});
+  document.getElementById('tabMdBtn').addEventListener('click',function(){switchTab('md');});
+  document.getElementById('hCo').addEventListener('click',backToCo);
+  document.getElementById('ourIn').addEventListener('keydown',function(e){addP(e,'our');});
+  document.getElementById('clientIn').addEventListener('keydown',function(e){addP(e,'client');});
+  document.getElementById('qbOur1').addEventListener('click',function(){addQ('our','이동현 상무');});
+  document.getElementById('qbOur2').addEventListener('click',function(){addQ('our','최정규 부장');});
+  document.getElementById('addTiBtn').addEventListener('click',addTI);
+  document.getElementById('saveBtn').addEventListener('click',saveMeeting);
+  document.getElementById('resetBtn').addEventListener('click',resetForm);
+  document.getElementById('dlMdBtn').addEventListener('click',dlMd);
+  document.getElementById('syncMdBtn').addEventListener('click',syncMd);
+  document.getElementById('addCoConfirmBtn').addEventListener('click',confirmAddCo);
+  document.getElementById('addCoCancelBtn').addEventListener('click',function(){closeMov('addCoMov');});
+  document.getElementById('newCoName').addEventListener('keydown',function(e){if(e.key==='Enter')confirmAddCo();});
+  document.getElementById('addSfConfirmBtn').addEventListener('click',confirmAddSf);
+  document.getElementById('addSfCancelBtn').addEventListener('click',function(){closeMov('addSfMov');});
+  document.getElementById('newSfName').addEventListener('keydown',function(e){if(e.key==='Enter')confirmAddSf();});
+  document.querySelectorAll('.ftb').forEach(function(btn){btn.addEventListener('click',function(){setFT(this.dataset.ft);});});
+  document.getElementById('tdConfBtn').addEventListener('click',confirmTodo);
+  document.getElementById('tdCancelBtn').addEventListener('click',function(){closeMov('todoMov');});
+  document.getElementById('optCom').addEventListener('click',function(){selOpt('complete');});
+  document.getElementById('optPost').addEventListener('click',function(){selOpt('postpone');});
+  document.getElementById('editSaveBtn').addEventListener('click',saveEditM);
+  document.getElementById('editAddTodoBtn').addEventListener('click',function(){editTodos.push({id:'td'+Date.now(),text:'',date:'',done:false});rEditTodos();});
+  document.getElementById('editCancelBtn').addEventListener('click',function(){closeMov('editMov');});
+  document.getElementById('editOurIn').addEventListener('keydown',function(e){addEditP(e,'our');});
+  document.getElementById('projIn').addEventListener('keydown',function(e){if(e.key!=='Enter')return;var v=document.getElementById('projIn').value.trim();if(v&&!projs.includes(v)){projs.push(v);rProjTags();}document.getElementById('projIn').value='';});
+  document.getElementById('editProjIn').addEventListener('keydown',function(e){if(e.key!=='Enter')return;var v=document.getElementById('editProjIn').value.trim();if(v&&!editProjs.includes(v)){editProjs.push(v);rEditProjTags();}document.getElementById('editProjIn').value='';});
+  document.getElementById('editClientIn').addEventListener('keydown',function(e){addEditP(e,'client');});
+  document.getElementById('editQb1').addEventListener('click',function(){addEditQ('our','이동현 상무');});
+  document.getElementById('editQb2').addEventListener('click',function(){addEditQ('our','최정규 부장');});
+  document.getElementById('addIntBtn').addEventListener('click',openAddInt);
+  document.getElementById('addIntConfirmBtn').addEventListener('click',confirmAddInt);
+  document.getElementById('addIntCancelBtn').addEventListener('click',function(){closeMov('addIntMov');});
+  document.getElementById('qbFrom1').addEventListener('click',function(){document.getElementById('intFrom').value='이종권 대표';});
+  document.getElementById('qbFrom2').addEventListener('click',function(){document.getElementById('intFrom').value='이동현 상무';});
+  document.getElementById('intDoneConfirmBtn').addEventListener('click',confirmIntDone);
+  document.getElementById('intDoneCancelBtn').addEventListener('click',function(){closeMov('intDoneMov');});
+  /* 모바일: 업체 검색창 포커스 시 목록 드롭다운 표시 */
+  var mobSI=document.getElementById('coSearchIn');var mobSB=document.getElementById('sbody');
+  var mobTB=document.getElementById('mobToggleBtn');
+  function updTogBtn(){if(mobTB)mobTB.textContent=mobSB.classList.contains('mob-open')?'▲':'▼';}
+  function mobShowDrop(){if(window.innerWidth<=768){mobSB.classList.add('mob-open');updTogBtn();}}
+  mobSI.addEventListener('focus',mobShowDrop);
+  mobSI.addEventListener('input',mobShowDrop);
+  mobSB.addEventListener('click',function(){setTimeout(function(){mobSB.classList.remove('mob-open');updTogBtn();},50);});
+  if(mobTB){
+    mobTB.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(mobSB.classList.contains('mob-open')){mobSB.classList.remove('mob-open');}
+      else{mobSB.classList.add('mob-open');}
+      updTogBtn();
+    });
+  }
+  document.addEventListener('click',function(e){
+    if(window.innerWidth<=768&&!mobSB.contains(e.target)&&e.target!==mobSI&&e.target!==mobTB){
+      mobSB.classList.remove('mob-open');updTogBtn();
+    }
+  });
+}
+
+function switchNav(n){
+  curNav=n;
+  ['nCo','nSek'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('on');});
+  var t={co:'nCo',sek:'nSek'}[n];
+  if(t)document.getElementById(t).classList.add('on');
+  document.getElementById('addCoBtn').style.display=n==='co'?'flex':'none';
+  var sw=document.getElementById('coSearchWrap');
+  if(sw){sw.style.display=n==='co'?'block':'none';}
+  if(n!=='co'){coSearch='';var si=document.getElementById('coSearchIn');if(si)si.value='';}
+  var sv=document.getElementById('sekView');
+  if(n==='sek'){document.getElementById('homeView').style.display='none';document.getElementById('mainView').style.display='none';document.getElementById('projHistView').style.display='none';sv.style.display='block';rSekView();}
+  else{sv.style.display='none';if(S.selId){document.getElementById('homeView').style.display='none';document.getElementById('projHistView').style.display='none';document.getElementById('mainView').style.display='flex';}else{document.getElementById('homeView').style.display='block';document.getElementById('mainView').style.display='none';document.getElementById('projHistView').style.display='none';}}
+  rSb();}
+
+function rSb(){
+  var el=document.getElementById('sbody');
+  if(curNav==='sek'){rSbSek(el);return;}
+  if(!S.companies.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--t1);font-size:12px">업체가 없습니다</div>';return;}
+  el.innerHTML='';
+  var list=coSearch?S.companies.filter(function(c){return c.name.toLowerCase().includes(coSearch.toLowerCase());}):S.companies;
+  if(!list.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--t1);font-size:12px">검색 결과 없음</div>';return;}
+  list.forEach(function(c){
+    var isE=S.exp[c.id];var sfs=c.subfolders||[];
+    var tot=(S.meetings[c.id]||[]).length+sfs.reduce(function(s,sf){return s+(S.meetings[sf.id]||[]).length;},0);
+    var isA=S.selId===c.id&&S.selCoId===c.id;
+    var grp=document.createElement('div');
+    var row=document.createElement('div');row.className='crow'+(isA?' on':'');
+    var xbtn=document.createElement('button');xbtn.className='xbtn'+(isE?' open':'');xbtn.textContent='▶';
+    xbtn.addEventListener('click',function(e){e.stopPropagation();tExp(c.id);});
+    var dot=document.createElement('div');dot.className='cdot';dot.style.background=c.color;
+    var info=document.createElement('div');info.className='ci';
+    info.innerHTML='<div class="cn">'+c.name+'</div><div class="cm">'+tot+'건 폴더 '+sfs.length+'개</div>';
+    info.addEventListener('click',function(){selV(c.id,c.id);});
+    var ra=document.createElement('div');ra.className='ra';
+    var ab=document.createElement('button');ab.className='ib';ab.textContent='+';
+    ab.addEventListener('click',function(e){e.stopPropagation();openSf(c.id);});
+    var db=document.createElement('button');db.className='ib del';db.textContent='x';
+    db.addEventListener('click',function(e){e.stopPropagation();delCo(c.id);});
+    ra.appendChild(ab);ra.appendChild(db);
+    row.appendChild(xbtn);row.appendChild(dot);row.appendChild(info);row.appendChild(ra);
+    grp.appendChild(row);
+    if(isE){
+      var sfList=document.createElement('div');sfList.className='sfl';
+      sfs.forEach(function(sf){
+        var cnt=(S.meetings[sf.id]||[]).length;var sfA=S.selId===sf.id;
+        var sfr=document.createElement('div');sfr.className='sfr'+(sfA?' on':'');
+        var ico=document.createElement('span');ico.style.cssText='font-size:11px;color:var(--t1)';ico.textContent=FI[sf.type]||'[폴더]';
+        var sfi=document.createElement('div');sfi.className='sfi';sfi.innerHTML='<div class="sfn">'+sf.name+'</div><div class="sfm">'+cnt+'건</div>';
+        var sra=document.createElement('div');sra.className='ra';
+        var sd=document.createElement('button');sd.className='ib del';sd.textContent='x';
+        (function(ci,si){sd.addEventListener('click',function(e){e.stopPropagation();delSf(ci,si);});})(c.id,sf.id);
+        sra.appendChild(sd);
+        (function(si,ci){sfr.addEventListener('click',function(){selV(si,ci);});})(sf.id,c.id);
+        sfr.appendChild(ico);sfr.appendChild(sfi);sfr.appendChild(sra);sfList.appendChild(sfr);});
+      var ab2=document.createElement('button');ab2.className='addb';ab2.textContent='+ 폴더 추가';
+      ab2.addEventListener('click',function(){openSf(c.id);});sfList.appendChild(ab2);grp.appendChild(sfList);}
+    el.appendChild(grp);});}
+
+function rSbTodo(el){
+  var all=getAllTd();var now=new Date();now.setHours(0,0,0,0);
+  var up=all.filter(function(t){return!t.done&&t.date&&new Date(t.date)>=now;}).sort(function(a,b){return a.date.localeCompare(b.date);}).slice(0,15);
+  if(!up.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--t1);font-size:12px">예정된 후속조치가 없습니다</div>';return;}
+  el.innerHTML='';
+  up.forEach(function(t){var di=dday(t.date);var div=document.createElement('div');div.className='tsbx';
+    div.innerHTML='<span class="dd '+di.c+'">'+di.l+'</span><div style="font-size:12px;color:var(--t1);margin-bottom:2px;line-height:1.4">'+esc(t.text)+'</div><div style="font-size:10px;color:var(--t2)">'+esc(t.cName)+(t.sfN?' · '+esc(t.sfN):'')+'</div>';
+    (function(vId,cId){div.addEventListener('click',function(){switchNav('co');selV(vId,cId);});})(t.vId,t.cId);el.appendChild(div);});}
+
+function rSbSek(el){
+  var pend=S.internal.filter(function(t){return!t.done;});
+  var done=S.internal.filter(function(t){return t.done;});
+  el.innerHTML='<div style="padding:12px 8px"><div style="font-size:12px;color:var(--t1);margin-bottom:8px">진행 중 <strong style="color:var(--t1)">'+pend.length+'건</strong></div><div style="font-size:12px;color:var(--t1)">완료됨 <strong style="color:var(--gn)">'+done.length+'건</strong></div></div>';}
+
+function openAddCo(){document.getElementById('addCoMov').classList.add('open');setTimeout(function(){document.getElementById('newCoName').focus();},100);}
+function confirmAddCo(){
+  var name=document.getElementById('newCoName').value.trim();if(!name)return;
+  var id='c_'+Date.now();var col=PAL[S.companies.length%PAL.length];
+  S.companies.push({id:id,name:name,color:col,subfolders:[],createdAt:new Date().toISOString()});S.meetings[id]=[];
+  save();closeMov('addCoMov');document.getElementById('newCoName').value='';rSb();selV(id,id);rGDash();}
+function delCo(id){
+  if(!confirm('업체를 삭제하면 모든 미팅 기록도 삭제됩니다.'))return;
+  var c=S.companies.find(function(x){return x.id===id;});
+  (c.subfolders||[]).forEach(function(sf){delete S.meetings[sf.id];});delete S.meetings[id];
+  S.companies=S.companies.filter(function(x){return x.id!==id;});
+  if(S.selCoId===id){S.selId=null;S.selCoId=null;showHome();}save();rSb();updCnt();rGDash();}
+function delSf(cId,sfId){
+  if(!confirm('폴더를 삭제하면 해당 미팅 기록도 삭제됩니다.'))return;
+  var c=S.companies.find(function(x){return x.id===cId;});
+  if(c)c.subfolders=(c.subfolders||[]).filter(function(sf){return sf.id!==sfId;});
+  delete S.meetings[sfId];if(S.selId===sfId){S.selId=null;S.selCoId=null;showHome();}save();rSb();updCnt();rGDash();}
+function tExp(id){S.exp[id]=!S.exp[id];save();rSb();}
+function openSf(cId){sfTgt=cId;var c=S.companies.find(function(x){return x.id===cId;});document.getElementById('sfDesc').textContent=c.name+'의 부서 또는 현장을 추가하세요';document.getElementById('newSfName').value='';setFT('dept');document.getElementById('addSfMov').classList.add('open');setTimeout(function(){document.getElementById('newSfName').focus();},100);}
+function setFT(t){sfType=t;document.querySelectorAll('.ftb').forEach(function(b){b.classList.toggle('on',b.dataset.ft===t);});}
+function confirmAddSf(){
+  var name=document.getElementById('newSfName').value.trim();if(!name)return;
+  var c=S.companies.find(function(x){return x.id===sfTgt;});if(!c)return;if(!c.subfolders)c.subfolders=[];
+  var sfId='sf_'+Date.now();c.subfolders.push({id:sfId,name:name,type:sfType,createdAt:new Date().toISOString()});
+  S.meetings[sfId]=[];S.exp[c.id]=true;save();closeMov('addSfMov');rSb();selV(sfId,c.id);rGDash();}
+
+function selV(vId,cId,_noPush){
+  S.selId=vId;S.selCoId=cId;
+  var c=S.companies.find(function(x){return x.id===cId;});
+  var sf=(c.subfolders||[]).find(function(x){return x.id===vId;});
+  document.getElementById('homeView').style.display='none';
+  document.getElementById('mainView').style.display='flex';
+  document.getElementById('sekView').style.display='none';
+  document.getElementById('projHistView').style.display='none';
+  document.getElementById('hDot').style.background=c.color;
+  document.getElementById('hCo').textContent=c.name;
+  var sep=document.getElementById('hSep'),sub=document.getElementById('hSub');
+  if(sf){sep.style.display='';sub.textContent=FI[sf.type]+' '+sf.name;}else{sep.style.display='none';sub.textContent='';}
+  var lbl=document.getElementById('clLbl');if(lbl)lbl.textContent='('+c.name+')';
+  var fn=sf?c.name.replace(/\s/g,'_')+'_'+sf.name.replace(/\s/g,'_')+'_미팅기록.md':c.name.replace(/\s/g,'_')+'_미팅기록.md';
+  document.getElementById('mdFn').textContent=fn;
+  if(!S.meetings[vId])S.meetings[vId]=[];
+  rSb();switchTab('dash',true);save();
+  if(!_noPush)history.pushState({page:'main',vId:vId,cId:cId,tab:'dash'},'','');}
+function backToCo(){if(S.selCoId)selV(S.selCoId,S.selCoId);}
+function showHome(_noPush){document.getElementById('homeView').style.display='block';document.getElementById('mainView').style.display='none';document.getElementById('sekView').style.display='none';document.getElementById('projHistView').style.display='none';S.selId=null;S.selCoId=null;rSb();rGDash();if(!_noPush)history.pushState({page:'home'},'','');}
+
+function switchTab(t,_noPush){
+  var map={dash:'pDash',new:'pNew',hist:'pHist',md:'pMd'};
+  var bm={dash:'tabDashBtn',new:'tabNewBtn',hist:'tabHistBtn',md:'tabMdBtn'};
+  Object.keys(map).forEach(function(k){var el=document.getElementById(map[k]);if(el)el.style.display=k===t?'block':'none';var btn=document.getElementById(bm[k]);if(btn)btn.classList.toggle('on',k===t);});
+  if(t==='dash')rDash();if(t==='hist')rHist();if(t==='md')rMd();
+  if(t==='new'){var d=document.getElementById('metaDate');if(d&&!d.value)d.value=td();rPrevAttendees();rPrevProj();}
+  if(!_noPush&&S.selId)history.pushState({page:'main',vId:S.selId,cId:S.selCoId,tab:t},'','');}
+
+function rPrevAttendees(){
+  var mtgs=S.meetings[S.selId]||[];
+  var ourSet={};var clientSet={};
+  mtgs.forEach(function(m){
+    (m.attendeesOur||[]).forEach(function(n){ourSet[n]=true;});
+    (m.attendeesClient||[]).forEach(function(n){clientSet[n]=true;});});
+  // 세강측 고정 퀵버튼 제외
+  ['이동현 상무','최정규 부장'].forEach(function(n){delete ourSet[n];});
+  var ourList=Object.keys(ourSet);var clientList=Object.keys(clientSet);
+  var ow=document.getElementById('prevOurWrap');var op=document.getElementById('prevOur');
+  var cw=document.getElementById('prevClientWrap');var cp=document.getElementById('prevClient');
+  if(ourList.length){ow.style.display='block';op.innerHTML='';ourList.forEach(function(n){var btn=document.createElement('button');btn.className='qb';btn.textContent=n;btn.style.cssText='border-color:rgba(79,142,247,.2);font-size:10px';btn.addEventListener('click',function(){addQ('our',n);});op.appendChild(btn);});}else{ow.style.display='none';}
+  if(clientList.length){cw.style.display='block';cp.innerHTML='';clientList.forEach(function(n){var btn=document.createElement('button');btn.className='qb';btn.textContent=n;btn.style.cssText='border-color:rgba(62,207,142,.3);background:rgba(62,207,142,.06);color:var(--gn);font-size:10px';btn.addEventListener('click',function(){addQ('client',n);});cp.appendChild(btn);});}else{cw.style.display='none';}}
+
+function rPrevProj(){
+  var wrap=document.getElementById('prevProjWrap');var cont=document.getElementById('prevProj');if(!wrap||!cont)return;
+  var coProjs=[];(S.meetings[S.selId]||[]).forEach(function(m){(m.projects||[]).forEach(function(p){if(coProjs.indexOf(p)<0)coProjs.push(p);});});
+  var available=coProjs.filter(function(p){return!projs.includes(p);});
+  wrap.style.display='block';
+  cont.innerHTML='';
+  available.forEach(function(name){
+    var chip=document.createElement('span');
+    chip.style.cssText='display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;border:1px solid rgba(245,166,35,.35);background:rgba(245,166,35,.07);font-size:11px;font-weight:600;color:var(--am);cursor:pointer;user-select:none';
+    chip.textContent=name;
+    chip.addEventListener('click',function(){if(!projs.includes(name)){projs.push(name);rProjTags();}});
+    chip.addEventListener('mouseover',function(){chip.style.background='rgba(245,166,35,.18)';});
+    chip.addEventListener('mouseout',function(){chip.style.background='rgba(245,166,35,.07)';});
+    cont.appendChild(chip);});}
+function rAllProjPanel(){
+  var panel=document.getElementById('allProjPanel');if(!panel)return;
+  if(panel.style.display==='block'){panel.style.display='none';return;}
+  panel.style.display='block';panel.innerHTML='';
+  var all=(S.projects||[]).filter(function(p){return!projs.includes(p);}).sort(function(a,b){return a.localeCompare(b,'ko');});
+  if(!all.length){panel.innerHTML='<div style=\'font-size:11px;color:var(--t1);padding:6px\'>등록된 프로젝트가 없습니다</div>';return;}
+  /* 검색창 */
+  var searchIn=document.createElement('input');
+  searchIn.type='text';searchIn.placeholder='검색...';
+  searchIn.style.cssText='width:100%;box-sizing:border-box;padding:4px 8px;margin-bottom:4px;border-radius:6px;border:1px solid var(--ac);background:rgba(79,142,247,0.08);color:var(--t1);font-size:11px;outline:none';
+  panel.appendChild(searchIn);
+  var listWrap=document.createElement('div');panel.appendChild(listWrap);
+  function renderRows(kw){
+    listWrap.innerHTML='';
+    var filtered=all.filter(function(n){return!kw||n.toLowerCase().includes(kw.toLowerCase());});
+    if(!filtered.length){var em=document.createElement('div');em.style.cssText='font-size:11px;color:var(--t1);padding:6px';em.textContent='검색 결과 없음';listWrap.appendChild(em);return;}
+    filtered.forEach(function(name){
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--t1)';
+      row.addEventListener('mouseover',function(){row.style.background='var(--s2)';});
+      row.addEventListener('mouseout',function(){row.style.background='transparent';});
+      var txt=document.createElement('span');txt.textContent=name;txt.style.cssText='flex:1;cursor:pointer';
+      txt.addEventListener('click',function(){if(!projs.includes(name)){projs.push(name);rProjTags();}panel.style.display='none';});
+      var del=document.createElement('button');del.textContent='×';del.title='레지스트리에서 삭제';
+      del.style.cssText='background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;padding:0 4px;line-height:1';
+      del.addEventListener('mouseover',function(){this.style.color='var(--rd)';});del.addEventListener('mouseout',function(){this.style.color='var(--t3)';});
+      (function(n){del.addEventListener('click',function(e){e.stopPropagation();S.projects=(S.projects||[]).filter(function(p){return p!==n;});save();all=all.filter(function(p){return p!==n;});renderRows(searchIn.value);});})(name);
+      row.appendChild(txt);row.appendChild(del);listWrap.appendChild(row);});
+  }
+  searchIn.addEventListener('input',function(){renderRows(searchIn.value);});
+  renderRows('');}
+
+function addP(e,side){if(e.key!=='Enter')return;var id=side==='our'?'ourIn':'clientIn';var name=document.getElementById(id).value.trim();if(!name)return;if(!pts[side].includes(name)){pts[side].push(name);rTags();}document.getElementById(id).value='';}
+function addQ(side,name){if(!pts[side].includes(name)){pts[side].push(name);rTags();}}
+function rmP(side,name){pts[side]=pts[side].filter(function(n){return n!==name;});rTags();}
+function rTags(){
+  var ot=document.getElementById('ourTags');var ct=document.getElementById('clientTags');ot.innerHTML='';
+  pts.our.forEach(function(n){var sp=document.createElement('span');sp.className='pt ptb';sp.textContent=n;var rm=document.createElement('button');rm.className='ptrm';rm.textContent='x';(function(name){rm.addEventListener('click',function(){rmP('our',name);});})(n);sp.appendChild(rm);ot.appendChild(sp);});
+  ct.innerHTML='';pts.client.forEach(function(n){var sp=document.createElement('span');sp.className='pt ptg';sp.textContent=n;var rm=document.createElement('button');rm.className='ptrm';rm.textContent='x';(function(name){rm.addEventListener('click',function(){rmP('client',name);});})(n);sp.appendChild(rm);ct.appendChild(sp);});}
+
+function rProjTags(){var el=document.getElementById('projTags');if(!el)return;el.innerHTML='';projs.forEach(function(n){var sp=document.createElement('span');sp.className='pt ptam';sp.textContent=n;var rm=document.createElement('button');rm.className='ptrm';rm.textContent='x';(function(name){rm.addEventListener('click',function(){projs=projs.filter(function(x){return x!==name;});rProjTags();});})(n);sp.appendChild(rm);el.appendChild(sp);});rPrevProj();}
+function rEditProjTags(){var el=document.getElementById('editProjTags');if(!el)return;el.innerHTML='';editProjs.forEach(function(n){var sp=document.createElement('span');sp.className='pt ptam';sp.textContent=n;var rm=document.createElement('button');rm.className='ptrm';rm.textContent='x';(function(name){rm.addEventListener('click',function(){editProjs=editProjs.filter(function(x){return x!==name;});rEditProjTags();});})(n);sp.appendChild(rm);el.appendChild(sp);});rEditPrevProj();}
+function rEditPrevProj(){
+  var wrap=document.getElementById('editPrevProjWrap');var cont=document.getElementById('editPrevProj');if(!wrap||!cont)return;
+  var coProjs=[];
+  (S.meetings[S.selId]||[]).forEach(function(m){(m.projects||[]).forEach(function(p){if(p&&!coProjs.includes(p))coProjs.push(p);});});
+  var available=coProjs.filter(function(p){return!editProjs.includes(p);});
+  var hasAll=(S.projects||[]).filter(function(p){return!editProjs.includes(p);}).length>0;
+  wrap.style.display=(available.length||hasAll)?'block':'none';
+  cont.innerHTML='';
+  available.forEach(function(name){
+    var chip=document.createElement('span');
+    chip.style.cssText='display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;border:1px solid rgba(245,166,35,.35);background:rgba(245,166,35,.07);font-size:11px;font-weight:600;color:var(--am);cursor:pointer;user-select:none';
+    chip.textContent=name;
+    chip.addEventListener('click',function(){if(!editProjs.includes(name)){editProjs.push(name);rEditProjTags();}});
+    chip.addEventListener('mouseover',function(){chip.style.background='rgba(245,166,35,.18)';});
+    chip.addEventListener('mouseout',function(){chip.style.background='rgba(245,166,35,.07)';});
+    cont.appendChild(chip);});
+  var panel=document.getElementById('editAllProjPanel');if(panel&&panel.style.display!=='none')rEditAllProjPanel();}
+
+function rEditAllProjPanel(){
+  var panel=document.getElementById('editAllProjPanel');if(!panel)return;
+  if(panel.style.display!=='none'){panel.style.display='none';return;}
+  var all=(S.projects||[]).filter(function(p){return!editProjs.includes(p);}).sort(function(a,b){return a.localeCompare(b,'ko');});
+  panel.innerHTML='';
+  /* 검색창 */
+  var searchIn=document.createElement('input');
+  searchIn.type='text';searchIn.placeholder='검색...';
+  searchIn.style.cssText='width:100%;box-sizing:border-box;padding:4px 8px;margin-bottom:4px;border-radius:6px;border:1px solid var(--ac);background:rgba(79,142,247,0.08);color:var(--t1);font-size:11px;outline:none';
+  panel.appendChild(searchIn);
+  var listWrap=document.createElement('div');panel.appendChild(listWrap);
+  function renderRows(kw){
+    listWrap.innerHTML='';
+    var filtered=all.filter(function(n){return!kw||n.toLowerCase().includes(kw.toLowerCase());});
+    if(!filtered.length){var em=document.createElement('div');em.style.cssText='font-size:11px;color:var(--t1)';em.textContent=kw?'검색 결과 없음':'전체 레지스트리에 추가 항목 없음';listWrap.appendChild(em);return;}
+    filtered.forEach(function(name){
+      var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:3px 0';
+      var txt=document.createElement('span');txt.textContent=name;txt.style.cssText='font-size:11px;color:var(--am);cursor:pointer;font-weight:600';
+      txt.addEventListener('click',function(){if(!editProjs.includes(name)){editProjs.push(name);rEditProjTags();}panel.style.display='none';});
+      txt.addEventListener('mouseover',function(){txt.style.textDecoration='underline';});
+      txt.addEventListener('mouseout',function(){txt.style.textDecoration='none';});
+      var del=document.createElement('button');del.textContent='×';
+      del.style.cssText='background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:0;line-height:1';
+      del.addEventListener('mouseover',function(){this.style.color='var(--rd)';});del.addEventListener('mouseout',function(){this.style.color='var(--t3)';});
+      (function(n){del.addEventListener('click',function(e){e.stopPropagation();S.projects=(S.projects||[]).filter(function(p){return p!==n;});save();all=all.filter(function(p){return p!==n;});renderRows(searchIn.value);rEditPrevProj();});})(name);
+      row.appendChild(txt);row.appendChild(del);listWrap.appendChild(row);});
+  }
+  searchIn.addEventListener('input',function(){renderRows(searchIn.value);});
+  renderRows('');
+  panel.style.display='block';}
+function rEditTodos(){
+  var cont=document.getElementById('editTodoList');if(!cont)return;cont.innerHTML='';
+  editTodos.forEach(function(td,i){
+    var isDone=!!td.done;
+    var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:8px;border:1px solid var(--bd);background:'+(isDone?'var(--s1)':'var(--s2)');
+    /* 완료 배지 */
+    if(isDone){var badge=document.createElement('span');badge.style.cssText='font-size:9px;padding:1px 6px;border-radius:99px;background:rgba(62,207,142,.15);color:#3ecf8e;white-space:nowrap;flex-shrink:0';badge.textContent='완료';row.appendChild(badge);}
+    /* 텍스트 */
+    var txtIn=document.createElement('input');txtIn.type='text';txtIn.value=td.text||'';
+    txtIn.style.cssText='flex:1;border:none;background:transparent;font-size:12px;color:'+(isDone?'var(--t3)':'var(--t1)')+';outline:none;min-width:0';
+    if(isDone)txtIn.style.textDecoration='line-through';
+    (function(idx){txtIn.addEventListener('input',function(){editTodos[idx].text=this.value;});})(i);
+    /* 날짜 */
+    var dtIn=document.createElement('input');dtIn.type='date';dtIn.value=td.date||'';
+    dtIn.style.cssText='border:none;background:transparent;font-size:11px;color:var(--t1);outline:none;width:110px;flex-shrink:0';
+    (function(idx){dtIn.addEventListener('change',function(){editTodos[idx].date=this.value;});})(i);
+    /* 삭제 버튼 */
+    var del=document.createElement('button');del.textContent='×';
+    del.style.cssText='background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0;line-height:1;flex-shrink:0';
+    del.addEventListener('mouseover',function(){this.style.color='var(--rd)';});
+    del.addEventListener('mouseout',function(){this.style.color='var(--t3)';});
+    (function(idx){del.addEventListener('click',function(){editTodos.splice(idx,1);rEditTodos();});})(i);
+    row.appendChild(txtIn);row.appendChild(dtIn);row.appendChild(del);cont.appendChild(row);
+  });
+  if(!editTodos.length){var em=document.createElement('div');em.style.cssText='font-size:12px;color:var(--t1);padding:4px 0';em.textContent='후속조치 없음';cont.appendChild(em);}
+}
+function addTI(){var id='ti_'+Date.now()+'_'+Math.random();tis.push({id:id,text:'',date:''});rTIs();}
+function rmTI(id){tis=tis.filter(function(t){return t.id!==id;});rTIs();}
+function rTIs(){
+  var el=document.getElementById('tiList');el.innerHTML='';
+  tis.forEach(function(t){
+    var row=document.createElement('div');row.className='tir';
+    var inp=document.createElement('input');inp.type='text';inp.placeholder='후속조치 내용 입력';inp.value=t.text;(function(ti){inp.addEventListener('input',function(){ti.text=this.value;});})(t);
+    var di=document.createElement('input');di.type='date';di.className='di';di.value=t.date;(function(ti){di.addEventListener('input',function(){ti.date=this.value;});})(t);
+    var del=document.createElement('button');del.className='ib del';del.textContent='x';(function(id){del.addEventListener('click',function(){rmTI(id);});})(t.id);
+    row.appendChild(inp);row.appendChild(di);row.appendChild(del);el.appendChild(row);});}
+
+function saveMeeting(){
+  if(!S.selId){alert('업체 또는 폴더를 선택해주세요.');return;}
+  var disc=document.getElementById('fDisc').value.trim();var dec=document.getElementById('fDec').value.trim();var memo=document.getElementById('fMemo').value.trim();
+  if(!disc&&!dec&&!memo){alert('미팅 내용을 입력해주세요.');return;}
+  var todos=tis.filter(function(t){return t.text.trim();}).map(function(t){return{id:'td_'+Date.now()+'_'+Math.random(),text:t.text.trim(),date:t.date,done:false};});
+  var m={id:'m_'+Date.now(),date:document.getElementById('metaDate').value||td(),type:document.getElementById('metaType').value,attendeesOur:pts.our.slice(),attendeesClient:pts.client.slice(),projects:projs.slice(),discussion:disc,decision:dec,memo:memo,todos:todos,followupLog:[],createdAt:new Date().toISOString()};
+  projs.forEach(function(p){if(p&&!(S.projects||[]).includes(p)){if(!Array.isArray(S.projects))S.projects=[];S.projects.push(p);}if(p&&!(S.projectMeta||{})[p]){if(!S.projectMeta)S.projectMeta={};S.projectMeta[p]={status:'진행중'};}});
+  S.meetings[S.selId].push(m);S.meetings[S.selId].sort(function(a,b){return a.date.localeCompare(b.date);});
+  save();updCnt();rSb();resetForm();toast('미팅이 저장되었습니다!');switchTab('dash');rGDash();}
+function resetForm(){document.getElementById('metaDate').value=td();document.getElementById('metaType').value='meeting';document.getElementById('fDisc').value='';document.getElementById('fDec').value='';document.getElementById('fMemo').value='';pts={our:[],client:[]};rTags();projs=[];rProjTags();rPrevProj();tis=[];addTI();}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function getAllTd(){var res=[];S.companies.forEach(function(c){function add(vId,sfN){(S.meetings[vId]||[]).forEach(function(m){(m.todos||[]).forEach(function(t){var logs=(m.followupLog||[]).filter(function(l){return l.todoId?l.todoId===t.id:l.todoText===t.text;});res.push(Object.assign({},t,{vId:vId,cId:c.id,cName:c.name,sfN:sfN,mDate:m.date,mId:m.id,mProjects:m.projects||[],followupLogs:logs}));});});}add(c.id,null);(c.subfolders||[]).forEach(function(sf){add(sf.id,sf.name);});});return res;}
+function getCurTd(){var res=[];(S.meetings[S.selId]||[]).forEach(function(m){(m.todos||[]).forEach(function(t){res.push(Object.assign({},t,{mDate:m.date,mId:m.id}));});});return res;}
+function dday(ds){if(!ds)return{c:'ddx',l:'날짜 미정'};var now=new Date();now.setHours(0,0,0,0);var d=new Date(ds);var diff=Math.round((d-now)/86400000);if(diff<0)return{c:'ddo',l:'D+'+Math.abs(diff)};if(diff===0)return{c:'ddr',l:'D-Day'};if(diff<=3)return{c:'ddr',l:'D-'+diff};if(diff<=14)return{c:'dda',l:'D-'+diff};return{c:'ddg',l:'D-'+diff};}
+
+function rGIntList(){
+  var el=document.getElementById('gIntList');if(!el)return;
+  var pend=S.internal.filter(function(x){return!x.done;}).slice().sort(function(a,b){if(!a.dueDate&&!b.dueDate)return 0;if(!a.dueDate)return 1;if(!b.dueDate)return -1;return a.dueDate.localeCompare(b.dueDate);});
+  var done=S.internal.filter(function(x){return x.done;}).slice().sort(function(a,b){return(b.doneAt||'').localeCompare(a.doneAt||'');});
+  el.innerHTML='';
+  if(!pend.length){var em=document.createElement('div');em.style.cssText='padding:12px 4px;color:var(--t1);font-size:12px;text-align:center';em.textContent='진행 중인 지시사항이 없습니다 ✓';el.appendChild(em);}
+  pend.forEach(function(item){var di=dday(item.dueDate);var row=document.createElement('div');row.style.cssText='padding:8px 10px;border-radius:8px;background:var(--s2);border:1px solid var(--bd);margin-bottom:6px';var hd=document.createElement('div');hd.style.cssText='display:flex;align-items:flex-start;gap:6px';var txt=document.createElement('div');txt.style.cssText='flex:1;font-size:12px;line-height:1.5;color:var(--t1)';txt.textContent=item.text;var acts=document.createElement('div');acts.style.cssText='display:flex;gap:2px;flex-shrink:0';var eb=document.createElement('button');eb.className='ib';eb.title='수정';eb.textContent='✎';(function(id){eb.addEventListener('click',function(){openEditInt(id);});})(item.id);var cb=document.createElement('button');cb.className='ib';cb.style.color='var(--gn)';cb.title='완료';cb.textContent='✓';(function(id){cb.addEventListener('click',function(){togInt(id);});})(item.id);acts.appendChild(eb);acts.appendChild(cb);hd.appendChild(txt);hd.appendChild(acts);row.appendChild(hd);var meta=document.createElement('div');meta.style.cssText='font-size:10px;color:var(--t1);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center';if(item.from){var fs=document.createElement('span');fs.style.color='var(--ac)';fs.textContent='📌 '+item.from;meta.appendChild(fs);}if(item.dueDate){var ds=document.createElement('span');ds.innerHTML='<span class="dd '+di.c+'" style="font-size:10px;padding:1px 5px">'+di.l+'</span> '+item.dueDate;meta.appendChild(ds);}row.appendChild(meta);el.appendChild(row);});
+  if(done.length){
+    var togBtn=document.createElement('div');togBtn.style.cssText='cursor:pointer;padding:8px 4px;font-size:11px;font-weight:600;color:var(--t1);user-select:none;display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd);margin-top:4px';
+    var arrow=document.createElement('span');arrow.textContent='▶';var lbl=document.createElement('span');lbl.textContent='완료된 지시사항 ('+done.length+'건)';
+    togBtn.appendChild(arrow);togBtn.appendChild(lbl);
+    var doneList=document.createElement('div');doneList.style.display='none';var doneOpen=false;
+    togBtn.addEventListener('click',function(){doneOpen=!doneOpen;arrow.textContent=doneOpen?'▼':'▶';doneList.style.display=doneOpen?'block':'none';});
+    done.forEach(function(item){
+      var r2=document.createElement('div');r2.style.cssText='padding:8px 10px;border-radius:8px;background:var(--s2);border:1px solid rgba(62,207,142,.15);margin-bottom:6px;opacity:.7';
+      var t2=document.createElement('div');t2.style.cssText='font-size:12px;line-height:1.5;color:var(--t1);text-decoration:line-through';t2.textContent=item.text;r2.appendChild(t2);
+      var m2=document.createElement('div');m2.style.cssText='font-size:10px;color:var(--t1);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center';
+      if(item.from){var f2=document.createElement('span');f2.style.color='var(--ac)';f2.textContent='📌 '+item.from;m2.appendChild(f2);}
+      if(item.doneAt){var da=document.createElement('span');da.style.color='var(--gn)';da.textContent='✓ 완료: '+item.doneAt;m2.appendChild(da);}
+      r2.appendChild(m2);
+      if(item.doneMemo){var dm=document.createElement('div');dm.style.cssText='font-size:11px;color:var(--gn);margin-top:4px';dm.textContent='→ '+item.doneMemo;r2.appendChild(dm);}
+      doneList.appendChild(r2);
+    });
+    el.appendChild(togBtn);el.appendChild(doneList);
+  }
+}
+function updIntBadge(){var pend=S.internal.filter(function(x){return!x.done;}).length;var btn=document.getElementById('nSek');if(!btn)return;var badge=btn.querySelector('.int-badge');if(pend>0){if(!badge){badge=document.createElement('span');badge.className='int-badge';badge.style.cssText='display:inline-block;background:var(--rd);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:0 5px;margin-left:3px;vertical-align:middle;line-height:16px';btn.appendChild(badge);}badge.textContent=pend;}else{if(badge)badge.remove();}}
+function rGDash(){
+  rGIntList();updIntBadge();
+  /* 전체 미팅 수 업데이트 */
+  var totM=Object.values(S.meetings).filter(Array.isArray).reduce(function(s,m){return s+m.length;},0);
+  document.getElementById('gTot').textContent=totM;
+  rProjTabs();
+  rProjHome();}
+
+/* ===== 프로젝트 홈 렌더링 ===== */
+var ST_ORDER=['진행중','납품중','적용','미적용'];
+var ST_COLOR={'진행중':'#5b9cf6','납품중':'var(--ac2)','적용':'var(--gn)','미적용':'var(--rd)'};
+var ST_ICON={'진행중':'🔵','납품중':'🟣','적용':'🟢','미적용':'🔴'};
+
+function getProjSt(name){return (S.projectMeta[name]||{}).status||'진행중';}
+function setProjSt(name,st){if(!S.projectMeta)S.projectMeta={};if(!S.projectMeta[name])S.projectMeta[name]={};S.projectMeta[name].status=st;save();rProjTabs();rProjHome();}
+
+function selProjTab(st){
+  curProjTab=st;
+  rProjTabs();
+  rProjHome();}
+
+/* 탭 버튼 렌더링 (숫자 포함) */
+var TAB_DEF=[
+  {st:'진행중',icon:'🔵'},
+  {st:'납품중',icon:'🟣'},
+  {st:'적용',icon:'🟢'},
+  {st:'미적용',icon:'🔴'},
+  {st:'all',icon:'',label:'전체'}
+];
+function rProjTabs(){
+  var el=document.getElementById('projTabs');if(!el)return;
+  var allProjs=S.projects||[];
+  /* 상태별 카운트 */
+  var cnt={};TAB_DEF.forEach(function(t){cnt[t.st]=0;});
+  cnt['all']=allProjs.length;
+  allProjs.forEach(function(p){var s=getProjSt(p);if(cnt[s]!==undefined)cnt[s]++;});
+  el.innerHTML='';
+  TAB_DEF.forEach(function(t){
+    var btn=document.createElement('button');
+    btn.className='proj-tab'+(curProjTab===t.st?' on':'');
+    btn.dataset.st=t.st;
+    var lbl=t.label||(t.icon+' '+t.st);
+    var n=cnt[t.st]||0;
+    btn.innerHTML=lbl+'<span style="margin-left:5px;font-size:11px;opacity:.8;font-weight:700">'+n+'</span>';
+    (function(s){btn.addEventListener('click',function(){selProjTab(s);});})(t.st);
+    el.appendChild(btn);});}
+
+function rProjHome(){
+  var list=document.getElementById('projList');var emp=document.getElementById('gEmp');if(!list)return;
+  var allProjs=(S.projects||[]).slice().sort(function(a,b){return a.localeCompare(b,'ko');});
+  if(!allProjs.length){list.innerHTML='';emp.style.display='block';return;}
+  emp.style.display='none';list.innerHTML='';
+  /* 필터링 */
+  var q=projSearch.toLowerCase();
+  var byTab=curProjTab==='all'?allProjs:allProjs.filter(function(p){return getProjSt(p)===curProjTab;});
+  var filtered=q?byTab.filter(function(p){return p.toLowerCase().includes(q);}):byTab;
+  if(!filtered.length){list.innerHTML='<div style="padding:32px;text-align:center;color:var(--t1);font-size:13px">이 상태의 프로젝트가 없습니다</div>';return;}
+  /* 프로젝트별 미팅 수 집계 */
+  function getMtgCnt(pName){var cnt=0;Object.values(S.meetings).forEach(function(ml){if(!Array.isArray(ml))return;ml.forEach(function(m){if((m.projects||[]).includes(pName))cnt++;});});return cnt;}
+  /* 프로젝트에 연결된 업체 목록 반환 [{name, vId, cId, color}] */
+  function getLinkedCos(pName){var seen={};var result=[];S.companies.forEach(function(c){var linked=(S.meetings[c.id]||[]).some(function(m){return(m.projects||[]).includes(pName);});if(!linked)(c.subfolders||[]).forEach(function(sf){if(!linked&&(S.meetings[sf.id]||[]).some(function(m){return(m.projects||[]).includes(pName);}))linked=true;});if(linked&&!seen[c.id]){seen[c.id]=true;result.push({name:c.name,vId:c.id,cId:c.id,color:c.color||'#4f8ef7'});}});return result;}
+  filtered.forEach(function(pName){
+    var st=getProjSt(pName);var cnt=getMtgCnt(pName);var cos=getLinkedCos(pName);
+    var card=document.createElement('div');card.className='proj-card';
+    /* 상태 배지 */
+    var badge=document.createElement('button');badge.className='st-badge st-'+st;badge.textContent=ST_ICON[st]+' '+st;
+    (function(n,s){badge.addEventListener('click',function(e){e.stopPropagation();openStMenu(e,n);});})(pName,st);
+    /* 이름 + 업체 칩 (세로로 묶은 info 영역) */
+    var info=document.createElement('div');info.className='proj-card-info';
+    var nameDiv=document.createElement('div');nameDiv.className='proj-name';nameDiv.textContent=pName;
+    info.appendChild(nameDiv);
+    if(cos.length){
+      var chipRow=document.createElement('div');chipRow.className='proj-co-chips';
+      cos.forEach(function(co){
+        var chip=document.createElement('span');chip.className='proj-co-chip';chip.textContent='🏢 '+co.name;
+        /* 업체 고유 색상 적용 */
+        var hex=co.color;
+        chip.style.cssText='color:'+hex+';border-color:'+hex+'44;background:'+hex+'18';
+        (function(vId,cId){chip.addEventListener('click',function(e){e.stopPropagation();selV(vId,cId);switchTab('hist');});})(co.vId,co.cId);
+        chipRow.appendChild(chip);});
+      info.appendChild(chipRow);}
+    /* 미팅수 */
+    var cntDiv=document.createElement('div');cntDiv.className='proj-cnt';cntDiv.textContent='미팅 '+cnt+'건';
+    card.appendChild(badge);card.appendChild(info);card.appendChild(cntDiv);
+    (function(n){card.addEventListener('click',function(){showProjHist(n);});})(pName);
+    list.appendChild(card);});}
+
+function openStMenu(e,projName){
+  closeStMenu();
+  var menu=document.createElement('div');menu.className='st-menu';menu.style.minWidth='130px';stMenu=menu;
+  /* 상태 변경 항목 */
+  ST_ORDER.forEach(function(st){
+    var opt=document.createElement('div');opt.className='st-opt';
+    var cur=getProjSt(projName)===st;
+    opt.innerHTML='<span>'+ST_ICON[st]+'</span><span style="color:'+(cur?ST_COLOR[st]:'var(--t1)')+';font-weight:'+(cur?'700':'500')+'">'+st+'</span>'+(cur?' ✓':'');
+    (function(s){opt.addEventListener('click',function(){setProjSt(projName,s);closeStMenu();});})(st);
+    menu.appendChild(opt);});
+  /* 구분선 */
+  var sep=document.createElement('div');sep.style.cssText='border-top:1px solid var(--bd);margin:4px 0';menu.appendChild(sep);
+  /* 이름 변경 */
+  var renOpt=document.createElement('div');renOpt.className='st-opt';
+  renOpt.innerHTML='<span>✎</span><span style="color:var(--ac)">이름 변경</span>';
+  renOpt.addEventListener('click',function(){closeStMenu();renameProjDlg(projName);});
+  menu.appendChild(renOpt);
+  /* 삭제 */
+  var delOpt=document.createElement('div');delOpt.className='st-opt';
+  delOpt.innerHTML='<span>×</span><span style="color:var(--rd)">삭제</span>';
+  delOpt.addEventListener('click',function(){closeStMenu();deleteProj(projName);});
+  menu.appendChild(delOpt);
+  /* 위치 결정 */
+  var x=e.clientX,y=e.clientY;
+  if(x+150>window.innerWidth)x=window.innerWidth-160;
+  if(y+240>window.innerHeight)y=window.innerHeight-250;
+  menu.style.left=x+'px';menu.style.top=y+'px';
+  document.body.appendChild(menu);
+  setTimeout(function(){document.addEventListener('click',closeStMenu,{once:true});},0);}
+function closeStMenu(){if(stMenu){stMenu.remove();stMenu=null;}}
+
+/* 프로젝트 이름 변경 다이얼로그 */
+function renameProjDlg(oldName){
+  /* 간단한 인라인 모달 */
+  var ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:300';
+  var box=document.createElement('div');box.style.cssText='background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:22px;width:360px;max-width:90vw';
+  box.innerHTML='<div style="font-size:15px;font-weight:700;margin-bottom:4px">프로젝트 이름 변경</div><div style="font-size:12px;color:var(--t1);margin-bottom:14px">연결된 모든 미팅 기록의 프로젝트명도 함께 변경됩니다</div>';
+  var inp=document.createElement('input');inp.type='text';inp.className='fi';inp.value=oldName;inp.style.cssText='width:100%;margin-bottom:14px;font-size:13px';
+  box.appendChild(inp);
+  var btns=document.createElement('div');btns.style.cssText='display:flex;gap:8px;justify-content:flex-end';
+  var cancel=document.createElement('button');cancel.className='ab bs';cancel.textContent='취소';cancel.addEventListener('click',function(){document.body.removeChild(ov);});
+  var confirm=document.createElement('button');confirm.className='ab bp';confirm.textContent='변경';
+  confirm.addEventListener('click',function(){
+    var newName=inp.value.trim();
+    if(!newName){inp.focus();return;}
+    if(newName===oldName){document.body.removeChild(ov);return;}
+    if((S.projects||[]).includes(newName)){alert('이미 존재하는 프로젝트명입니다.');inp.focus();return;}
+    /* S.projects 교체 */
+    var idx=(S.projects||[]).indexOf(oldName);
+    if(idx>=0)S.projects[idx]=newName;
+    /* S.projectMeta 교체 */
+    if(S.projectMeta&&S.projectMeta[oldName]){S.projectMeta[newName]=S.projectMeta[oldName];delete S.projectMeta[oldName];}
+    /* 모든 미팅 m.projects[] 교체 */
+    Object.values(S.meetings).forEach(function(ml){if(!Array.isArray(ml))return;ml.forEach(function(m){if(!m.projects)return;var pi=m.projects.indexOf(oldName);if(pi>=0)m.projects[pi]=newName;});});
+    save();document.body.removeChild(ov);rProjTabs();rProjHome();toast('프로젝트명이 변경되었습니다\n'+oldName+' → '+newName);});
+  btns.appendChild(cancel);btns.appendChild(confirm);box.appendChild(btns);
+  ov.appendChild(box);document.body.appendChild(ov);
+  setTimeout(function(){inp.select();},50);}
+
+/* 프로젝트 삭제 */
+function deleteProj(projName){
+  var mtgCnt=0;Object.values(S.meetings).forEach(function(ml){if(!Array.isArray(ml))return;ml.forEach(function(m){if((m.projects||[]).includes(projName))mtgCnt++;});});
+  var msg='프로젝트 "'+projName+'"을(를) 삭제하시겠습니까?';
+  if(mtgCnt>0)msg+='\n\n연결된 미팅 '+mtgCnt+'건에서 이 프로젝트 태그가 제거됩니다.\n(미팅 기록 자체는 삭제되지 않습니다)';
+  if(!confirm(msg))return;
+  /* S.projects에서 제거 */
+  S.projects=(S.projects||[]).filter(function(p){return p!==projName;});
+  /* S.projectMeta에서 제거 */
+  if(S.projectMeta)delete S.projectMeta[projName];
+  /* 모든 미팅 m.projects[]에서 태그 제거 */
+  Object.values(S.meetings).forEach(function(ml){if(!Array.isArray(ml))return;ml.forEach(function(m){if(!m.projects)return;m.projects=m.projects.filter(function(p){return p!==projName;});});});
+  save();rProjTabs();rProjHome();toast('"'+projName+'" 프로젝트가 삭제되었습니다');}
+
+function showProjHist(projName,_noPush){
+  /* 뷰 전환 */
+  document.getElementById('homeView').style.display='none';
+  document.getElementById('mainView').style.display='none';
+  document.getElementById('sekView').style.display='none';
+  document.getElementById('projHistView').style.display='flex';
+  var st=getProjSt(projName);
+  document.getElementById('projHistName').textContent=projName;
+  document.getElementById('projHistBadge').innerHTML='<span class="st-badge st-'+st+'">'+ST_ICON[st]+' '+st+'</span>';
+  if(!_noPush)history.pushState({page:'projHist',projName:projName},'','');
+  /* 렌더링 */
+  var listEl=document.getElementById('projHistList');listEl.innerHTML='';
+  /* 업체별로 해당 프로젝트 태그된 미팅 수집 */
+  var palette=[
+    {bg:'rgba(79,142,247,0.12)',border:'#4f8ef7',text:'#7ab3ff'},
+    {bg:'rgba(62,207,142,0.12)',border:'#3ecf8e',text:'#3ecf8e'},
+    {bg:'rgba(245,166,35,0.12)',border:'#f5a623',text:'#f5a623'},
+    {bg:'rgba(175,82,222,0.12)',border:'#af52de',text:'#cf8ff7'},
+    {bg:'rgba(247,111,111,0.12)',border:'#f76f6f',text:'#f76f6f'},
+  ];
+  var colIdx=0;var total=0;
+  S.companies.forEach(function(c){
+    var hasSubs=(c.subfolders||[]).length>0;
+    var sections=[];
+    var rootMtgs=(S.meetings[c.id]||[]).filter(function(m){return(m.projects||[]).includes(projName);}).slice().sort(function(a,b){return a.date.localeCompare(b.date);});
+    if(rootMtgs.length){
+      var lbl=hasSubs?c.name+' (본사)':c.name;
+      sections.push({label:c.name,subLabel:hasSubs?'본사':null,subIcon:null,icon:'🏢',vId:c.id,mtgs:rootMtgs});
+    }
+    (c.subfolders||[]).forEach(function(sf){var sfMtgs=(S.meetings[sf.id]||[]).filter(function(m){return(m.projects||[]).includes(projName);}).slice().sort(function(a,b){return a.date.localeCompare(b.date);});if(sfMtgs.length)sections.push({label:c.name,subLabel:sf.name,subIcon:FI[sf.type]||'📁',icon:'🏢',vId:sf.id,mtgs:sfMtgs});});
+    sections.forEach(function(g){
+      total+=g.mtgs.length;
+      var pal=palette[colIdx%palette.length];colIdx++;
+      if(colIdx>1){var bar=document.createElement('div');bar.style.cssText='height:4px;background:'+pal.border+';margin:0;opacity:0.5';listEl.appendChild(bar);}
+      var hd=document.createElement('div');hd.className='proj-hist-co-hd';hd.style.cssText='background:'+pal.bg+';border-left:4px solid '+pal.border;
+      var hdHtml='<span>'+g.icon+'</span><span style="color:'+pal.text+'">'+esc(g.label)+'</span>';
+      if(g.subLabel){hdHtml+='<span style="color:var(--t1);font-size:12px;font-weight:500;margin:0 2px"> ›</span><span style="color:var(--t1);font-size:12px;font-weight:600">'+(g.subIcon?g.subIcon+' ':'')+esc(g.subLabel)+'</span>';}
+      hdHtml+='<span style="font-size:11px;color:var(--t1);font-weight:500;margin-left:4px">'+g.mtgs.length+'건</span>';
+      hd.innerHTML=hdHtml;
+      /* 업체 클릭 → 해당 업체 상세로 이동 */
+      (function(vId,cId){hd.style.cursor='pointer';hd.addEventListener('click',function(){selV(vId,cId);switchTab('hist');});})(g.vId,c.id);
+      listEl.appendChild(hd);
+      g.mtgs.forEach(function(m,mi){
+        var uid='ph_'+g.vId+'_'+mi;
+        var ourN=(m.attendeesOur||[]).join(', ');var clN=(m.attendeesClient||[]).join(', ');
+        var card=document.createElement('div');card.className='mc';card.style.margin='0';
+        var mhd=document.createElement('div');mhd.className='mch';
+        mhd.innerHTML='<span class="db">'+m.date+'</span><span class="tb tb'+m.type+'">'+(TM[m.type]||m.type)+'</span><span style="flex:1"></span><span class="ch" id="ch_'+uid+'">v</span>';
+        mhd.addEventListener('click',function(){togCardU(uid);});card.appendChild(mhd);
+        if(ourN||clN){var att=document.createElement('div');att.className='mat';if(ourN)att.innerHTML+='<span style="font-size:12px"><span style="color:var(--ac);font-weight:600">세강</span> <span style="color:var(--t1);font-weight:500">'+esc(ourN)+'</span></span>';if(clN)att.innerHTML+='<span style="font-size:12px"><span style="color:var(--gn);font-weight:600">거래처</span> <span style="color:var(--t1);font-weight:500">'+esc(clN)+'</span></span>';card.appendChild(att);}
+        var body=document.createElement('div');body.className='mcb';body.id='body_'+uid;
+        var html='';if(m.discussion)html+='<div class="fl">주요 논의사항</div><div class="fv">'+esc(m.discussion)+'</div>';if(m.decision)html+='<div class="fl">결정된 사항</div><div class="fv">'+esc(m.decision)+'</div>';if(m.memo)html+='<div class="fl">특이사항</div><div class="fv">'+esc(m.memo)+'</div>';
+        if(!html)html='<div class="fv" style="color:var(--t1)">내용 없음</div>';
+        body.innerHTML=html;
+        var navDiv=document.createElement('div');navDiv.style.cssText='margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)';
+        var nb=document.createElement('button');nb.className='ab bs';nb.style.cssText='padding:4px 10px;font-size:11px';nb.textContent='미팅 상세 보기';
+        (function(vId,cId,mId){nb.addEventListener('click',function(){selV(vId,cId);switchTab('hist');setTimeout(function(){var mtgs=(S.meetings[vId]||[]).slice().reverse();var idx=mtgs.findIndex(function(x){return x.id===mId;});if(idx>=0){togCard(idx);var b=document.getElementById('body_'+idx);if(b)b.scrollIntoView({behavior:'smooth',block:'center'});}},120);});}) (g.vId,c.id,m.id);
+        navDiv.appendChild(nb);body.appendChild(navDiv);card.appendChild(body);listEl.appendChild(card);});});});
+  if(!total){listEl.innerHTML='<div style="padding:48px;text-align:center;color:var(--t1);font-size:13px"><div style="font-size:36px;margin-bottom:8px">📋</div>이 프로젝트에 연결된 미팅이 없습니다</div>';}}
+function openTdFromDash(vId,cId,mId,tId){S.selId=vId;S.selCoId=cId;togTd(mId,tId);}
+function navToMeeting(vId,cId,mId){selV(vId,cId);switchTab('hist');var mtgs=(S.meetings[vId]||[]).slice().reverse();var idx=mtgs.findIndex(function(m){return m.id===mId;});if(idx>=0){setTimeout(function(){togCard(idx);var b=document.getElementById('body_'+idx);if(b)b.scrollIntoView({behavior:'smooth',block:'center'});},80);}}
+
+function rDash(){
+  var mtgs=S.meetings[S.selId]||[];var tds=getCurTd();var now=new Date();now.setHours(0,0,0,0);
+  var mEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
+  var tm=tds.filter(function(t){return!t.done&&t.date&&new Date(t.date)>=now&&new Date(t.date)<=mEnd;});
+  var ug=tds.filter(function(t){return!t.done&&t.date&&(new Date(t.date)-now)/86400000<=3&&new Date(t.date)>=now;});
+  document.getElementById('dTot').textContent=mtgs.length;document.getElementById('dMon').textContent=tm.length;document.getElementById('dUrg').textContent=ug.length;
+  var list=document.getElementById('dashTd');
+  var active=tds.filter(function(t){return!t.done&&t.date;}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  var noD=tds.filter(function(t){return!t.done&&!t.date;});var done=tds.filter(function(t){return t.done;});
+  list.innerHTML='';
+  if(!tds.length){list.innerHTML='<div class="emp" style="padding:24px"><div style="font-size:40px;opacity:.4">&#10003;</div><div style="font-size:14px;color:var(--t2)">후속조치가 없습니다</div></div>';return;}
+  active.concat(noD,done).forEach(function(t){
+    var di=dday(t.date);var card=document.createElement('div');card.className='tc'+(t.done?' done':'');
+    var ck=document.createElement('div');ck.className='tck'+(t.done?' on':'');ck.textContent=t.done?'V':' ';
+    (function(mId,tId){ck.addEventListener('click',function(){togTd(mId,tId);});})(t.mId,t.id);
+    if(!t.done){(function(mId,tId){card.style.cursor='pointer';card.addEventListener('click',function(e){if(ck.contains(e.target)||e.target===ck)return;togTd(mId,tId);});})(t.mId,t.id);}
+    var pb=t.postponed&&!t.done?' [연기됨]':'';var cont=document.createElement('div');cont.className='tcc';
+    cont.innerHTML='<div class="tct">'+esc(t.text)+pb+'</div><div class="tcm"><span class="dd '+di.c+'" style="font-size:10px;padding:1px 6px">'+di.l+'</span><span>미팅: '+t.mDate+'</span></div>'+(t.completeMemo?'<div style="font-size:11px;color:var(--gn);margin-top:4px">✓ '+esc(t.completeMemo)+'</div>':'');
+    card.appendChild(ck);card.appendChild(cont);list.appendChild(card);});}
+
+function togTd(mId,tId){
+  var m=(S.meetings[S.selId]||[]).find(function(x){return x.id===mId;});if(!m)return;
+  var t=(m.todos||[]).find(function(x){return x.id===tId;});if(!t)return;
+  if(t.done){t.done=false;save();rDash();rHist();rSb();return;}
+  tdTgt={mId:mId,tId:tId,sId:S.selId};tdOpt=null;
+  document.getElementById('tdMTitle').value=t.text;
+  document.getElementById('comMemo').value='';document.getElementById('postDate').value=t.date||'';document.getElementById('postReason').value='';document.getElementById('postMemo').value='';
+  document.getElementById('comContactDate').value=td();document.getElementById('comContactWith').value='';document.getElementById('comContactType').value='call';
+  document.getElementById('postContactDate').value=td();document.getElementById('postContactWith').value='';document.getElementById('postContactType').value='call';
+  document.getElementById('comFlds').style.display='none';document.getElementById('postFlds').style.display='none';
+  document.getElementById('tdConfBtn').disabled=true;
+  document.querySelectorAll('input[name="topt"]').forEach(function(r){r.checked=false;});
+  document.getElementById('optCom').style.borderColor='var(--bd)';document.getElementById('optPost').style.borderColor='var(--bd)';
+  renderContactSug(S.selId);
+  document.getElementById('todoMov').classList.add('open');}
+
+function renderContactSug(selId){
+  var seen={};
+  (S.meetings[selId]||[]).forEach(function(m){
+    (m.attendeesOur||[]).forEach(function(n){seen[n]=true;});
+    (m.attendeesClient||[]).forEach(function(n){seen[n]=true;});});
+  var names=Object.keys(seen);
+  ['comContactSug','postContactSug'].forEach(function(containerId){
+    var inputId=containerId==='comContactSug'?'comContactWith':'postContactWith';
+    var el=document.getElementById(containerId);el.innerHTML='';
+    names.forEach(function(name){
+      var btn=document.createElement('button');
+      btn.className='qb';btn.textContent=name;
+      btn.style.cssText='font-size:10px';
+      btn.addEventListener('click',function(){document.getElementById(inputId).value=name;});
+      el.appendChild(btn);});});}
+
+function selOpt(opt){
+  tdOpt=opt;
+  document.getElementById('comFlds').style.display=opt==='complete'?'block':'none';
+  document.getElementById('postFlds').style.display=opt==='postpone'?'block':'none';
+  document.getElementById('tdConfBtn').disabled=false;
+  document.getElementById('optCom').style.borderColor=opt==='complete'?'var(--gn)':'var(--bd)';
+  document.getElementById('optPost').style.borderColor=opt==='postpone'?'var(--am)':'var(--bd)';
+  document.querySelector('input[name="topt"][value="'+opt+'"]').checked=true;}
+
+function confirmTodo(){
+  if(!tdTgt||!tdOpt)return;
+  var m=(S.meetings[tdTgt.sId]||[]).find(function(x){return x.id===tdTgt.mId;});if(!m)return;
+  var t=(m.todos||[]).find(function(x){return x.id===tdTgt.tId;});if(!t)return;
+  var newTdText=document.getElementById('tdMTitle').value.trim();
+  if(newTdText&&newTdText!==t.text){
+    (m.followupLog||[]).forEach(function(log){
+      if(log.todoText===t.text){
+        log.todoText=newTdText;
+        if(log.mId){Object.values(S.meetings).forEach(function(ml){if(!Array.isArray(ml))return;var gm=ml.find(function(x){return x.id===log.mId;});if(gm&&gm.discussion)gm.discussion=gm.discussion.split(t.text).join(newTdText);});}
+      }
+    });
+    t.text=newTdText;
+  }
+  var now=new Date().toISOString().split('T')[0];
+  if(!m.followupLog)m.followupLog=[];
+  var typeMap={call:'통화',meeting:'대면 미팅',online:'온라인 미팅',other:'기타'};
+  var newM;
+  if(tdOpt==='complete'){
+    var cDate=document.getElementById('comContactDate').value;
+    var cWith=document.getElementById('comContactWith').value.trim();
+    var cTypeVal=document.getElementById('comContactType').value;
+    var cType=typeMap[cTypeVal]||'';
+    var memo=document.getElementById('comMemo').value.trim();
+    var logMsg=[];
+    if(cDate||cWith) logMsg.push((cDate?'['+cDate+'] ':'')+( cWith?cWith+'와(과) ':'')+cType);
+    if(memo) logMsg.push(memo);
+    var logStr=logMsg.join(' — ')||'완료 처리됨';
+    t.done=true;t.completedAt=now;t.completeMemo=logStr;
+    m.followupLog.push({id:'log_'+Date.now(),date:now,todoText:t.text,todoId:t.id,memo:logStr,type:'complete',contactDate:cDate,contactWith:cWith,contactType:cTypeVal});
+    var disc='[후속조치 완료] '+t.text+(memo?'\n\n처리 내용: '+memo:'');
+    newM={id:'m_'+Date.now(),date:cDate||now,type:cTypeVal,attendeesOur:[],attendeesClient:cWith?[cWith]:[],projects:[],discussion:disc,decision:'',memo:'',todos:[],followupLog:[],createdAt:new Date().toISOString()};
+    m.followupLog[m.followupLog.length-1].mId=newM.id;
+    toast('완료 처리되었습니다'+(cWith?' ('+cWith+')':''));
+  }else{
+    var pDate=document.getElementById('postContactDate').value;
+    var pWith=document.getElementById('postContactWith').value.trim();
+    var pTypeVal=document.getElementById('postContactType').value;
+    var pType=typeMap[pTypeVal]||'';
+    var nd=document.getElementById('postDate').value;
+    var reason=document.getElementById('postReason').value.trim();
+    var pmemo=document.getElementById('postMemo').value.trim();
+    var old=t.date;t.date=nd;t.postponed=true;
+    var logMsg2=[];
+    if(pDate||pWith) logMsg2.push((pDate?'['+pDate+'] ':'')+( pWith?pWith+'와(과) ':'')+pType);
+    logMsg2.push('일정 연기: '+(old||'미정')+' → '+(nd||'미정')+(reason?' ('+reason+')':''));
+    if(pmemo) logMsg2.push(pmemo);
+    var logStr2=logMsg2.join(' — ');
+    m.followupLog.push({id:'log_'+Date.now(),date:now,todoText:t.text,todoId:t.id,memo:logStr2,type:'postpone',contactDate:pDate,contactWith:pWith,contactType:pTypeVal});
+    var disc2='[일정 연기] '+t.text+'\n기존: '+(old||'미정')+' → 변경: '+(nd||'미정')+(reason?' ('+reason+')':'')+(pmemo?'\n\n'+pmemo:'');
+    newM={id:'m_'+Date.now(),date:pDate||now,type:pTypeVal,attendeesOur:[],attendeesClient:pWith?[pWith]:[],projects:[],discussion:disc2,decision:'',memo:'',todos:[],followupLog:[],createdAt:new Date().toISOString()};
+    m.followupLog[m.followupLog.length-1].mId=newM.id;
+    toast('일정 연기 처리되었습니다'+(pWith?' ('+pWith+')':''));}
+  S.meetings[tdTgt.sId].push(newM);
+  S.meetings[tdTgt.sId].sort(function(a,b){return a.date.localeCompare(b.date);});
+  save();closeMov('todoMov');rDash();rHist();rSb();rGDash();updCnt();}
+
+var _statDetailItems=[];
+var _statDetailTitle='';
+
+function filterStatDetail(kw){
+  var q=(kw||'').trim().toLowerCase();
+  var filtered=q?_statDetailItems.filter(function(item){
+    return (item.text&&item.text.toLowerCase().includes(q))||
+           (item.coName&&item.coName.toLowerCase().includes(q))||
+           (item.sfName&&item.sfName.toLowerCase().includes(q))||
+           (item.discussion&&item.discussion.toLowerCase().includes(q))||
+           (item.decision&&item.decision.toLowerCase().includes(q))||
+           (item.memo&&item.memo.toLowerCase().includes(q))||
+           (item.projects&&item.projects.some(function(p){return p.toLowerCase().includes(q);}));
+  }):_statDetailItems;
+  document.getElementById('statDetailTitle').textContent=_statDetailTitle+' ('+filtered.length+'건'+(q?' · 검색결과':'')+')';
+  renderStatList(filtered,q);}
+
+function renderStatList(items,kw){
+  var list=document.getElementById('statDetailList');list.innerHTML='';
+  if(!items.length){list.innerHTML='<div style="color:var(--t1);font-size:13px;text-align:center;padding:16px">'+(kw?'검색 결과 없음':'내역이 없습니다')+'</div>';return;}
+  items.forEach(function(item){
+    var di=dday(item.date);
+    var row=document.createElement('div');row.style.cssText='display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .12s';
+    row.addEventListener('mouseover',function(){this.style.background='var(--s1)';});row.addEventListener('mouseout',function(){this.style.background='';});
+    var ddsp=document.createElement('span');ddsp.className='dd '+di.c;ddsp.style.cssText='font-size:10px;padding:1px 6px;flex-shrink:0;margin-top:2px';ddsp.textContent=di.l;
+    var inner=document.createElement('div');inner.style.cssText='flex:1;min-width:0';
+    var textDiv=document.createElement('div');textDiv.style.cssText='font-size:13px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px';textDiv.textContent=item.text;
+    var metaDiv=document.createElement('div');metaDiv.style.cssText='display:flex;align-items:center;flex-wrap:wrap;gap:4px';
+    if(item.coColor){var dot=document.createElement('span');dot.style.cssText='width:7px;height:7px;border-radius:50%;background:'+item.coColor+';display:inline-block;flex-shrink:0';metaDiv.appendChild(dot);}
+    var coSpan=document.createElement('span');coSpan.style.cssText='font-size:11px;font-weight:600;color:'+(item.coColor||'var(--t2)');coSpan.textContent=item.coName;metaDiv.appendChild(coSpan);
+    if(item.sfName){var sfS=document.createElement('span');sfS.style.cssText='font-size:11px;color:var(--t1)';sfS.textContent='· '+item.sfName;metaDiv.appendChild(sfS);}
+    if(item.type==='todo'&&item.date){var dtS=document.createElement('span');dtS.style.cssText='font-size:10px;color:var(--t1)';dtS.textContent='· '+item.date;metaDiv.appendChild(dtS);}
+    if(item.type==='todo'&&!item.date){var ndBadge=document.createElement('span');ndBadge.style.cssText='font-size:10px;color:var(--ac);background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:4px;padding:0 5px';ndBadge.textContent='날짜 미정';metaDiv.appendChild(ndBadge);}
+    if(item.projects&&item.projects.length){item.projects.forEach(function(p){var ps=document.createElement('span');ps.style.cssText='font-size:10px;color:var(--am);background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.25);border-radius:4px;padding:0 5px';ps.textContent='📋 '+p;metaDiv.appendChild(ps);});}
+    inner.appendChild(textDiv);inner.appendChild(metaDiv);
+    if(kw&&item.type==='meeting'){
+      var matched=null;
+      var fields=[item.discussion,item.decision,item.memo];
+      for(var fi=0;fi<fields.length;fi++){var fv=fields[fi]||'';if(fv.toLowerCase().includes(kw)){var idx=fv.toLowerCase().indexOf(kw);matched=fv.substring(Math.max(0,idx-20),idx+kw.length+40).trim();break;}}
+      if(matched){var prevDiv=document.createElement('div');prevDiv.style.cssText='font-size:11px;color:var(--t1);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';prevDiv.textContent='… '+matched+' …';inner.appendChild(prevDiv);}
+    }
+    row.appendChild(ddsp);row.appendChild(inner);
+    (function(vId,cId){row.addEventListener('click',function(){document.getElementById('statDetail').style.display='none';selV(vId,cId);switchTab('hist');});})(item.viewId,item.coId);
+    list.appendChild(row);
+  });}
+
+function showStatDetail(type){
+  var now=new Date();now.setHours(0,0,0,0);var mEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
+  var allTd=getAllTd();var title='';var items=[];
+  function getCoColor(cId){var co=S.companies.find(function(x){return x.id===cId;});return co?co.color:'';}
+  if(type==='all'){
+    title='전체 미팅 내역';
+    S.companies.forEach(function(c){
+      var views=[{id:c.id,name:c.name,sfName:null}].concat((c.subfolders||[]).map(function(sf){return{id:sf.id,name:c.name,sfName:sf.name};}));
+      views.forEach(function(v){(S.meetings[v.id]||[]).forEach(function(m){items.push({type:'meeting',date:m.date,text:(TM[m.type]||m.type),coName:v.name,sfName:v.sfName,viewId:v.id,coId:c.id,coColor:c.color,projects:m.projects||[],discussion:m.discussion||'',decision:m.decision||'',memo:m.memo||''});});});
+    });
+    items.sort(function(a,b){return b.date.localeCompare(a.date);});
+  }
+  else if(type==='month'){title='이번달 할 일';items=allTd.filter(function(t){return!t.done&&t.date&&new Date(t.date)>=now&&new Date(t.date)<=mEnd;}).sort(function(a,b){return a.date.localeCompare(b.date);}).map(function(t){return{type:'todo',date:t.date,text:t.text,coName:t.cName,sfName:t.sfN,viewId:t.vId,coId:t.cId,coColor:getCoColor(t.cId),projects:t.mProjects||[]};});}
+  else if(type==='urgent'){title='긴급 (3일 이내)';items=allTd.filter(function(t){return!t.done&&t.date&&(new Date(t.date)-now)/86400000<=3&&new Date(t.date)>=now;}).sort(function(a,b){return a.date.localeCompare(b.date);}).map(function(t){return{type:'todo',date:t.date,text:t.text,coName:t.cName,sfName:t.sfN,viewId:t.vId,coId:t.cId,coColor:getCoColor(t.cId),projects:t.mProjects||[]};});}
+  else if(type==='nodate'){title='날짜 미지정 할 일';items=allTd.filter(function(t){return!t.done&&!t.date;}).map(function(t){return{type:'todo',date:'',text:t.text,coName:t.cName,sfName:t.sfN,viewId:t.vId,coId:t.cId,coColor:getCoColor(t.cId),projects:t.mProjects||[]};});}
+  _statDetailItems=items;_statDetailTitle=title;
+  document.getElementById('statDetailTitle').textContent=title+' ('+items.length+'건)';
+  var searchBox=document.getElementById('statDetailSearch');var searchIn=document.getElementById('statDetailSearchIn');
+  searchBox.style.display=(type==='all')?'block':'none';if(searchIn)searchIn.value='';
+  renderStatList(items,'');
+  document.getElementById('statDetail').style.display='block';}
+
+function rHistGroup(){
+  var c=S.companies.find(function(x){return x.id===S.selCoId;});
+  var list=document.getElementById('histList');var emp=document.getElementById('histEmp');list.innerHTML='';
+  var groups=[];
+  var rootMtgs=(S.meetings[c.id]||[]).slice().reverse();
+  groups.push({label:c.name,icon:'🏢',vId:c.id,mtgs:rootMtgs});
+  (c.subfolders||[]).forEach(function(sf){
+    groups.push({label:sf.name,icon:FI[sf.type]||'📁',vId:sf.id,mtgs:(S.meetings[sf.id]||[]).slice().reverse()});
+  });
+  var total=groups.reduce(function(s,g){return s+g.mtgs.length;},0);
+  if(!total){emp.style.display='flex';return;}emp.style.display='none';
+
+  /* 폴더별 색상 팔레트 */
+  var palette=[
+    {bg:'rgba(79,142,247,0.12)',border:'#4f8ef7',text:'#7ab3ff'},
+    {bg:'rgba(62,207,142,0.12)',border:'#3ecf8e',text:'#3ecf8e'},
+    {bg:'rgba(245,166,35,0.12)',border:'#f5a623',text:'#f5a623'},
+    {bg:'rgba(175,82,222,0.12)',border:'#af52de',text:'#cf8ff7'},
+  ];
+
+  var colIdx=0;
+  groups.forEach(function(g){
+    if(!g.mtgs.length)return;
+    var pal=palette[colIdx%palette.length];colIdx++;
+
+    /* 폴더 구분 가로바 (첫번째 제외) */
+    if(colIdx>1){
+      var bar=document.createElement('div');
+      bar.style.cssText='height:4px;background:'+pal.border+';margin:0;opacity:0.5;';
+      list.appendChild(bar);
+    }
+
+    /* 섹션 헤더 */
+    var hd=document.createElement('div');
+    hd.style.cssText='display:flex;align-items:center;gap:8px;padding:10px 14px 9px;font-size:13px;font-weight:700;background:'+pal.bg+';border-left:4px solid '+pal.border+';position:sticky;top:0;z-index:1;';
+    hd.innerHTML='<span>'+g.icon+'</span><span style="color:'+pal.text+'">'+esc(g.label)+'</span><span style="font-size:11px;color:var(--t1);font-weight:500;margin-left:2px">'+g.mtgs.length+'건</span>';
+    list.appendChild(hd);
+
+    /* followupOrigin 계산 */
+    var followupOrigin={};(S.meetings[g.vId]||[]).forEach(function(om){(om.followupLog||[]).forEach(function(log){if(log.mId){var curText=log.todoText;if(log.todoId){var curTd=(om.todos||[]).find(function(td){return td.id===log.todoId;});if(curTd)curText=curTd.text;}followupOrigin[log.mId]={todoText:curText,origDate:om.date};}});});
+
+    g.mtgs.forEach(function(m,i){
+      var uid=g.vId+'_'+i;
+      var ourN=(m.attendeesOur||[]).join(', ');var clN=(m.attendeesClient||[]).join(', ');var projN=(m.projects||[]).join(', ');
+      var card=document.createElement('div');card.className='mc';
+      var mhd=document.createElement('div');mhd.className='mch';
+      mhd.innerHTML='<span class="db">'+m.date+'</span><span class="tb tb'+m.type+'">'+(TM[m.type]||m.type)+'</span><span style="flex:1"></span><span class="ch" id="ch_'+uid+'">v</span>';
+      mhd.addEventListener('click',function(){togCardU(uid);});card.appendChild(mhd);
+      if(followupOrigin[m.id]){var orig=followupOrigin[m.id];var ob=document.createElement('div');ob.style.cssText='font-size:11px;padding:4px 14px;border-top:1px solid var(--bd);background:rgba(79,142,247,.05);color:var(--t1);display:flex;align-items:center;gap:5px;flex-wrap:wrap;cursor:default';ob.innerHTML='<span style="color:var(--ac)">🔗</span><span>후속조치 출처</span><span style="color:var(--t1);font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(orig.todoText)+'</span><span style="flex-shrink:0;margin-left:4px">'+orig.origDate+'</span>';card.appendChild(ob);}
+      if(ourN||clN||projN){var att=document.createElement('div');att.className='mat';if(ourN)att.innerHTML+='<span style="font-size:12px"><span style="color:var(--ac);font-weight:600">세강</span> <span style="color:var(--t1);font-weight:500">'+esc(ourN)+'</span></span>';if(clN)att.innerHTML+='<span style="font-size:12px"><span style="color:var(--gn);font-weight:600">거래처</span> <span style="color:var(--t1);font-weight:500">'+esc(clN)+'</span></span>';if(projN){var ps=document.createElement('span');ps.innerHTML='<span style="font-size:12px"><span style="color:var(--am);font-weight:600">📋 프로젝트</span> <span style="color:var(--t1);font-weight:500">'+esc(projN)+'</span></span>';att.appendChild(ps);}card.appendChild(att);}
+      var body=document.createElement('div');body.className='mcb';body.id='body_'+uid;
+      var html='';if((m.projects||[]).length){html+='<div class="fl">프로젝트</div><div class="pr" style="margin-bottom:12px">'+(m.projects||[]).map(function(p){return '<span class="pt ptam">📋 '+esc(p)+'</span>';}).join('')+'</div>';}if(m.discussion)html+='<div class="fl">주요 논의사항</div><div class="fv">'+esc(m.discussion)+'</div>';if(m.decision)html+='<div class="fl">결정된 사항</div><div class="fv">'+esc(m.decision)+'</div>';if(m.memo)html+='<div class="fl">특이사항</div><div class="fv">'+esc(m.memo)+'</div>';body.innerHTML=html;
+      if((m.todos||[]).length){var tdLbl=document.createElement('div');tdLbl.className='fl';tdLbl.textContent='후속조치';body.appendChild(tdLbl);
+        m.todos.forEach(function(t){var di=dday(t.date);var trow=document.createElement('div');trow.className='mti';
+          var ck=document.createElement('div');ck.className='tck'+(t.done?' on':'');ck.style.cssText='width:16px;height:16px;font-size:10px';ck.textContent=t.done?'V':' ';
+          (function(mId,tId){ck.addEventListener('click',function(){togTd(mId,tId);});})(m.id,t.id);
+          var ddsp=document.createElement('span');ddsp.className='dd '+di.c;ddsp.style.cssText='font-size:10px;padding:1px 5px';ddsp.textContent=di.l;
+          var txt=document.createElement('div');txt.style.flex='1';txt.innerHTML='<span style="'+(t.done?'text-decoration:line-through;opacity:.5':'')+'">'+(t.postponed&&!t.done?'[연기] ':'')+esc(t.text)+'</span>'+(t.completeMemo?'<div style="font-size:11px;color:var(--gn);margin-top:2px">✓ '+esc(t.completeMemo)+'</div>':'');
+          trow.appendChild(ck);trow.appendChild(ddsp);trow.appendChild(txt);body.appendChild(trow);});}
+      if((m.followupLog||[]).length){var lgLbl=document.createElement('div');lgLbl.className='fl';lgLbl.style.cssText='margin-top:10px;color:var(--ac2)';lgLbl.textContent='진행 이력';body.appendChild(lgLbl);
+        m.followupLog.forEach(function(log){var lg=document.createElement('div');lg.className='lgit';lg.style.borderLeft='3px solid '+(log.type==='complete'?'var(--gn)':'var(--am)');lg.innerHTML='<div style="color:var(--t1);margin-bottom:2px">'+log.date+'</div><div style="color:var(--t1);white-space:pre-line">'+esc(log.memo)+'</div>';body.appendChild(lg);});}
+      var delDiv=document.createElement('div');delDiv.style.cssText='display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)';
+      var eb=document.createElement('button');eb.className='ab bs';eb.style.cssText='padding:5px 10px;font-size:11px';eb.textContent='편집';(function(mId,vId){eb.addEventListener('click',function(){S.selId=vId;openEditM(mId);});})(m.id,g.vId);
+      var db2=document.createElement('button');db2.className='ab bs';db2.style.cssText='padding:5px 10px;font-size:11px';db2.textContent='삭제';(function(mId,vId){db2.addEventListener('click',function(){S.selId=vId;delM(mId);});})(m.id,g.vId);
+      delDiv.appendChild(eb);delDiv.appendChild(db2);body.appendChild(delDiv);card.appendChild(body);list.appendChild(card);
+    });
+  });
+}
+function togCardU(uid){var b=document.getElementById('body_'+uid);var ch=document.getElementById('ch_'+uid);if(b)b.classList.toggle('open');if(ch)ch.classList.toggle('open');}
+
+function rHist(){
+  /* 업체 직접 선택(하위폴더 없이 업체 클릭) → 폴더별 전체 이력 */
+  if(S.selId===S.selCoId){var c=S.companies.find(function(x){return x.id===S.selCoId;});if(c&&(c.subfolders||[]).length){rHistGroup();return;}}
+  var mtgs=(S.meetings[S.selId]||[]).slice().reverse();var list=document.getElementById('histList');var emp=document.getElementById('histEmp');list.innerHTML='';
+  if(!mtgs.length){emp.style.display='flex';return;}emp.style.display='none';
+  var followupOrigin={};(S.meetings[S.selId]||[]).forEach(function(om){(om.followupLog||[]).forEach(function(log){if(log.mId){var curText=log.todoText;if(log.todoId){var curTd=(om.todos||[]).find(function(td){return td.id===log.todoId;});if(curTd)curText=curTd.text;}followupOrigin[log.mId]={todoText:curText,origDate:om.date};}});});
+  mtgs.forEach(function(m,i){
+    var ourN=(m.attendeesOur||[]).join(', ');var clN=(m.attendeesClient||[]).join(', ');var projN=(m.projects||[]).join(', ');
+    var card=document.createElement('div');card.className='mc';
+    var hd=document.createElement('div');hd.className='mch';
+    hd.innerHTML='<span class="db">'+m.date+'</span><span class="tb tb'+m.type+'">'+(TM[m.type]||m.type)+'</span><span style="flex:1"></span><span class="ch" id="ch_'+i+'">v</span>';
+    hd.addEventListener('click',function(){togCard(i);});card.appendChild(hd);
+    if(followupOrigin[m.id]){var orig=followupOrigin[m.id];var ob=document.createElement('div');ob.style.cssText='font-size:10px;padding:4px 14px;border-top:1px solid var(--bd);background:rgba(79,142,247,.05);color:var(--t1);display:flex;align-items:center;gap:5px;flex-wrap:wrap;cursor:default';ob.innerHTML='<span style="color:var(--ac)">\uD83D\uDD17</span><span>후속조치 출처</span><span style="color:var(--t1);font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(orig.todoText)+'</span><span style="flex-shrink:0;margin-left:4px">'+orig.origDate+'</span>';card.appendChild(ob);}
+    if(ourN||clN||projN){var att=document.createElement('div');att.className='mat';if(ourN)att.innerHTML+='<span style="font-size:12px"><span style="color:var(--ac);font-weight:600">세강</span> <span style="color:var(--t1);font-weight:500">'+esc(ourN)+'</span></span>';if(clN)att.innerHTML+='<span style="font-size:12px"><span style="color:var(--gn);font-weight:600">거래처</span> <span style="color:var(--t1);font-weight:500">'+esc(clN)+'</span></span>';if(projN){var ps=document.createElement('span');ps.innerHTML='<span style="font-size:12px"><span style="color:var(--am);font-weight:600">📋 프로젝트</span> <span style="color:var(--t1);font-weight:500">'+esc(projN)+'</span></span>';att.appendChild(ps);}card.appendChild(att);}
+    var body=document.createElement('div');body.className='mcb';body.id='body_'+i;
+    var html='';if((m.projects||[]).length){html+='<div class="fl">프로젝트</div><div class="pr" style="margin-bottom:12px">'+(m.projects||[]).map(function(p){return '<span class="pt ptam">\uD83D\uDCCB '+esc(p)+'</span>';}).join('')+'</div>';}if(m.discussion)html+='<div class="fl">주요 논의사항</div><div class="fv">'+esc(m.discussion)+'</div>';if(m.decision)html+='<div class="fl">결정된 사항</div><div class="fv">'+esc(m.decision)+'</div>';if(m.memo)html+='<div class="fl">특이사항</div><div class="fv">'+esc(m.memo)+'</div>';body.innerHTML=html;
+    if((m.todos||[]).length){var tdLbl=document.createElement('div');tdLbl.className='fl';tdLbl.textContent='후속조치';body.appendChild(tdLbl);
+      m.todos.forEach(function(t){var di=dday(t.date);var trow=document.createElement('div');trow.className='mti';
+        var ck=document.createElement('div');ck.className='tck'+(t.done?' on':'');ck.style.cssText='width:16px;height:16px;font-size:10px';ck.textContent=t.done?'V':' ';
+        (function(mId,tId){ck.addEventListener('click',function(){togTd(mId,tId);});})(m.id,t.id);
+        var ddsp=document.createElement('span');ddsp.className='dd '+di.c;ddsp.style.cssText='font-size:10px;padding:1px 5px';ddsp.textContent=di.l;
+        var txt=document.createElement('div');txt.style.flex='1';txt.innerHTML='<span style="'+(t.done?'text-decoration:line-through;opacity:.5':'')+'">'+( t.postponed&&!t.done?'[연기] ':'')+esc(t.text)+'</span>'+(t.completeMemo?'<div style="font-size:11px;color:var(--gn);margin-top:2px">✓ '+esc(t.completeMemo)+'</div>':'');
+        trow.appendChild(ck);trow.appendChild(ddsp);trow.appendChild(txt);body.appendChild(trow);});}
+    if((m.followupLog||[]).length){var lgLbl=document.createElement('div');lgLbl.className='fl';lgLbl.style.cssText='margin-top:10px;color:var(--ac2)';lgLbl.textContent='진행 이력';body.appendChild(lgLbl);
+      m.followupLog.forEach(function(log){var lg=document.createElement('div');lg.className='lgit';lg.style.borderLeft='3px solid '+(log.type==='complete'?'var(--gn)':'var(--am)');lg.innerHTML='<div style="color:var(--t2);margin-bottom:2px">'+log.date+'</div><div style="color:var(--t1);white-space:pre-line">'+esc(log.memo)+'</div>';body.appendChild(lg);});}
+    var delDiv=document.createElement('div');delDiv.style.cssText='display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)';
+    var eb=document.createElement('button');eb.className='ab bs';eb.style.cssText='padding:5px 10px;font-size:11px';eb.textContent='편집';(function(mId){eb.addEventListener('click',function(){openEditM(mId);});})(m.id);
+    var db2=document.createElement('button');db2.className='ab bs';db2.style.cssText='padding:5px 10px;font-size:11px';db2.textContent='삭제';(function(mId){db2.addEventListener('click',function(){delM(mId);});})(m.id);
+    delDiv.appendChild(eb);delDiv.appendChild(db2);body.appendChild(delDiv);card.appendChild(body);list.appendChild(card);});}
+
+function togCard(i){var b=document.getElementById('body_'+i);var ch=document.getElementById('ch_'+i);if(b)b.classList.toggle('open');if(ch)ch.classList.toggle('open');}
+function delM(id){if(!confirm('이 미팅 기록을 삭제하시겠습니까?'))return;S.meetings[S.selId]=(S.meetings[S.selId]||[]).filter(function(m){return m.id!==id;});save();updCnt();rSb();rHist();rGDash();}
+
+function genMd(){
+  var c=S.companies.find(function(x){return x.id===S.selCoId;});if(!c)return'';
+  var sf=(c.subfolders||[]).find(function(x){return x.id===S.selId;});var mtgs=S.meetings[S.selId]||[];
+  var title=sf?c.name+' - '+FI[sf.type]+' '+sf.name:c.name;
+  var L=['# '+title+' 미팅 기록','','>  생성: '+new Date().toLocaleDateString('ko-KR')+' | 총 '+mtgs.length+'건','','---',''];
+  if(!mtgs.length){L.push('*미팅 기록이 없습니다.*');return L.join('\n');}
+  mtgs.forEach(function(m,i){L.push('## '+(i+1)+'. '+m.date+' -- '+(TM[m.type]||m.type),'');if((m.attendeesOur||[]).length)L.push('**세강스틸러스:** '+m.attendeesOur.join(', '));if((m.attendeesClient||[]).length)L.push('**거래처:** '+m.attendeesClient.join(', '));if((m.projects||[]).length)L.push('**프로젝트:** '+m.projects.join(', '));L.push('');if(m.discussion)L.push('### 주요 논의사항','',m.discussion,'');if(m.decision)L.push('### 결정된 사항','',m.decision,'');if(m.memo)L.push('### 특이사항','',m.memo,'');if((m.todos||[]).length){L.push('### 후속조치','');m.todos.forEach(function(t){L.push('- ['+(t.done?'x':' ')+'] '+t.text+(t.date?' ('+t.date+')':'')+(t.postponed&&!t.done?' [연기됨]':''));if(t.completeMemo)L.push('  - 완료 사유: '+t.completeMemo);});L.push('');}if((m.followupLog||[]).length){L.push('### 진행 이력','');m.followupLog.forEach(function(log){L.push('- '+log.date+': '+log.memo);});L.push('');}L.push('---','');});return L.join('\n');}
+function rMd(){document.getElementById('mdBody').textContent=genMd();}
+function dlMd(){var c=S.companies.find(function(x){return x.id===S.selCoId;});if(!c)return;var sf=(c.subfolders||[]).find(function(x){return x.id===S.selId;});var md=genMd();var blob=new Blob(['\uFEFF'+md],{type:'text/markdown;charset=utf-8'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=sf?c.name.replace(/\s/g,'_')+'_'+sf.name.replace(/\s/g,'_')+'_미팅기록.md':c.name.replace(/\s/g,'_')+'_미팅기록.md';a.click();URL.revokeObjectURL(url);}
+
+function openEditM(mId){var m=(S.meetings[S.selId]||[]).find(function(x){return x.id===mId;});if(!m)return;editTgt=mId;editPts={our:(m.attendeesOur||[]).slice(),client:(m.attendeesClient||[]).slice()};editProjs=(m.projects||[]).slice();document.getElementById('editDate').value=m.date||'';document.getElementById('editType').value=m.type||'meeting';document.getElementById('editDisc').value=m.discussion||'';document.getElementById('editDec').value=m.decision||'';document.getElementById('editMemo').value=m.memo||'';document.getElementById('editOurIn').value='';document.getElementById('editClientIn').value='';document.getElementById('editProjIn').value='';editTodos=(m.todos||[]).map(function(t){return{id:t.id,text:t.text,date:t.date||'',done:t.done,completedAt:t.completedAt,completeMemo:t.completeMemo,postponed:t.postponed};});rEditTags();rEditProjTags();rEditTodos();var ep=document.getElementById('editAllProjPanel');if(ep)ep.style.display='none';document.getElementById('editMov').classList.add('open');}
+function addEditP(e,side){if(e.key!=='Enter')return;var id=side==='our'?'editOurIn':'editClientIn';var name=document.getElementById(id).value.trim();if(!name)return;if(!editPts[side].includes(name)){editPts[side].push(name);rEditTags();}document.getElementById(id).value='';}
+function addEditQ(side,name){if(!editPts[side].includes(name)){editPts[side].push(name);rEditTags();}}
+function rmEditP(side,name){editPts[side]=editPts[side].filter(function(n){return n!==name;});rEditTags();}
+function rEditTags(){var ot=document.getElementById('editOurTags');var ct=document.getElementById('editClientTags');ot.innerHTML='';editPts.our.forEach(function(n){var sp=document.createElement('span');sp.className='pt ptb';sp.textContent=n;var rm=document.createElement('button');rm.className='ptrm';rm.textContent='x';(function(name){rm.addEventListener('click',function(){rmEditP('our',name);});})(n);sp.appendChild(rm);ot.appendChild(sp);});ct.innerHTML='';editPts.client.forEach(function(n){var sp=document.createElement('span');sp.className='pt ptg';sp.textContent=n;var rm=document.createElement('button');rm.className='ptrm';rm.textContent='x';(function(name){rm.addEventListener('click',function(){rmEditP('client',name);});})(n);sp.appendChild(rm);ct.appendChild(sp);});}
+function saveEditM(){var m=(S.meetings[S.selId]||[]).find(function(x){return x.id===editTgt;});if(!m)return;m.date=document.getElementById('editDate').value||m.date;m.type=document.getElementById('editType').value;m.attendeesOur=editPts.our.slice();m.attendeesClient=editPts.client.slice();m.projects=editProjs.slice();m.discussion=document.getElementById('editDisc').value.trim();m.decision=document.getElementById('editDec').value.trim();m.memo=document.getElementById('editMemo').value.trim();editTodos.forEach(function(et){var orig=(m.todos||[]).find(function(ot){return ot.id===et.id;});if(orig&&orig.text!==et.text){(m.followupLog||[]).forEach(function(log){if(log.todoText===orig.text){log.todoText=et.text;if(log.mId){Object.values(S.meetings).forEach(function(ml){if(!Array.isArray(ml))return;var gm=ml.find(function(x){return x.id===log.mId;});if(gm&&gm.discussion)gm.discussion=gm.discussion.split(orig.text).join(et.text);});}}});}}); m.todos=editTodos.map(function(t){return{id:t.id,text:t.text,date:t.date,done:!!t.done,completedAt:t.completedAt||null,completeMemo:t.completeMemo||'',postponed:!!t.postponed};});S.meetings[S.selId].sort(function(a,b){return a.date.localeCompare(b.date);});save();closeMov('editMov');rHist();rGDash();toast('미팅이 수정되었습니다!');}
+
+// ==================== 세강스틸러스 지시사항 ====================
+function openAddInt(){editIntTgt=null;document.getElementById('intMovTitle').textContent='지시사항 추가';document.getElementById('intMovDesc').textContent='상급자 지시 또는 내부 업무를 등록하세요';document.getElementById('addIntConfirmBtn').textContent='추가';document.getElementById('intText').value='';document.getElementById('intFrom').value='';document.getElementById('intCreated').value=td();document.getElementById('intDue').value='';document.getElementById('addIntMov').classList.add('open');setTimeout(function(){document.getElementById('intText').focus();},100);}
+function openEditInt(id){var item=S.internal.find(function(x){return x.id===id;});if(!item)return;editIntTgt=id;document.getElementById('intMovTitle').textContent='지시사항 수정';document.getElementById('intMovDesc').textContent='내용을 수정하세요';document.getElementById('addIntConfirmBtn').textContent='저장';document.getElementById('intText').value=item.text;document.getElementById('intFrom').value=item.from||'';document.getElementById('intCreated').value=item.createdAt||td();document.getElementById('intDue').value=item.dueDate||'';document.getElementById('addIntMov').classList.add('open');setTimeout(function(){document.getElementById('intText').focus();},100);}
+function confirmAddInt(){var text=document.getElementById('intText').value.trim();if(!text){alert('지시 내용을 입력해주세요.');return;}var from=document.getElementById('intFrom').value.trim();var created=document.getElementById('intCreated').value||td();var due=document.getElementById('intDue').value;if(editIntTgt){var item=S.internal.find(function(x){return x.id===editIntTgt;});if(item){item.text=text;item.from=from;item.createdAt=created;item.dueDate=due;}save();closeMov('addIntMov');rSekView();rGIntList();updIntBadge();toast('수정되었습니다!');}else{var ni={id:'int_'+Date.now(),text:text,from:from,createdAt:created,dueDate:due,done:false,doneAt:null,doneMemo:''};S.internal.push(ni);save();closeMov('addIntMov');rSekView();rGIntList();updIntBadge();toast('지시사항이 추가되었습니다!');}}
+function togInt(id){var item=S.internal.find(function(x){return x.id===id;});if(!item)return;if(item.done){item.done=false;item.doneAt=null;item.doneMemo='';save();rSekView();rGIntList();updIntBadge();rSb();return;}intDoneTgt=id;document.getElementById('intDoneTitle').textContent=item.text;document.getElementById('intDoneMemo').value='';document.getElementById('intDoneMov').classList.add('open');setTimeout(function(){document.getElementById('intDoneMemo').focus();},100);}
+function confirmIntDone(){var item=S.internal.find(function(x){return x.id===intDoneTgt;});if(!item)return;item.done=true;item.doneAt=td();item.doneMemo=document.getElementById('intDoneMemo').value.trim();save();closeMov('intDoneMov');rSekView();rGIntList();updIntBadge();rSb();toast('완료 처리되었습니다!');}
+function delInt(id){if(!confirm('이 지시사항을 삭제하시겠습니까?'))return;S.internal=S.internal.filter(function(x){return x.id!==id;});save();rSekView();rGIntList();updIntBadge();rSb();}
+function rSekView(){
+  var pend=S.internal.filter(function(t){return!t.done;});var done=S.internal.filter(function(t){return t.done;});
+  var now=new Date();now.setHours(0,0,0,0);
+  var urg=pend.filter(function(t){return t.dueDate&&(new Date(t.dueDate)-now)/86400000<=3&&new Date(t.dueDate)>=now;});
+  document.getElementById('sekStats').innerHTML='<div class="dc"><div class="dl">전체</div><div class="dv">'+S.internal.length+'</div><div class="ds">건</div></div><div class="dc"><div class="dl">진행 중</div><div class="dv" style="color:var(--am)">'+pend.length+'</div><div class="ds">건</div></div><div class="dc"><div class="dl">완료됨</div><div class="dv" style="color:var(--gn)">'+done.length+'</div><div class="ds">건</div></div>';
+  var pe=document.getElementById('sekPending');pe.innerHTML='';
+  var ps=pend.sort(function(a,b){if(!a.dueDate&&!b.dueDate)return 0;if(!a.dueDate)return 1;if(!b.dueDate)return -1;return a.dueDate.localeCompare(b.dueDate);});
+  if(!ps.length)pe.innerHTML='<div style="padding:12px;color:var(--t1);font-size:12px;text-align:center">진행 중인 지시사항이 없습니다 ✓</div>';
+  else ps.forEach(function(item){pe.appendChild(mkIntCard(item));});
+  var de=document.getElementById('sekDone');de.innerHTML='';
+  var ds=done.sort(function(a,b){return(b.doneAt||'').localeCompare(a.doneAt||'');});
+  if(!ds.length)de.innerHTML='<div style="padding:12px;color:var(--t1);font-size:12px;text-align:center">완료된 항목이 없습니다</div>';
+  else ds.forEach(function(item){de.appendChild(mkIntCard(item));});}
+function mkIntCard(item){
+  var di=dday(item.dueDate);var card=document.createElement('div');card.className='int-card'+(item.done?' done':'');
+  var ck=document.createElement('div');ck.className='tck'+(item.done?' on':'');ck.style.cssText='width:20px;height:20px;font-size:12px;flex-shrink:0;margin-top:2px';ck.textContent=item.done?'V':' ';
+  (function(id){ck.addEventListener('click',function(){togInt(id);});})(item.id);
+  var body=document.createElement('div');body.className='int-body';
+  var title=document.createElement('div');title.className='int-title';title.style.textDecoration=item.done?'line-through':'none';title.textContent=item.text;
+  var meta=document.createElement('div');meta.className='int-meta';
+  if(item.from){var fs=document.createElement('span');fs.style.cssText='font-weight:600;color:var(--ac)';fs.textContent='📌 '+item.from;meta.appendChild(fs);}
+  if(item.createdAt){var cs=document.createElement('span');cs.textContent='지시일: '+item.createdAt;meta.appendChild(cs);}
+  if(item.dueDate&&!item.done){var ds2=document.createElement('span');ds2.innerHTML='<span class="dd '+di.c+'" style="font-size:10px;padding:1px 5px">'+di.l+'</span> 기한: '+item.dueDate;meta.appendChild(ds2);}
+  if(item.done&&item.doneAt){var dos=document.createElement('span');dos.textContent='완료: '+item.doneAt;meta.appendChild(dos);}
+  body.appendChild(title);body.appendChild(meta);
+  if(item.done&&item.doneMemo){var dm=document.createElement('div');dm.className='int-done-memo';dm.textContent='✓ '+item.doneMemo;body.appendChild(dm);}
+  var db=document.createElement('button');db.className='ib del';db.style.cssText='flex-shrink:0;margin-top:2px';db.textContent='x';
+  (function(id){db.addEventListener('click',function(){delInt(id);});})(item.id);
+  var eb=document.createElement('button');eb.className='ib';eb.style.cssText='flex-shrink:0;margin-top:2px';eb.textContent='✎';
+  (function(id){eb.addEventListener('click',function(){openEditInt(id);});})(item.id);
+  card.appendChild(ck);card.appendChild(body);card.appendChild(eb);card.appendChild(db);return card;}
+
+function updCnt(){var tot=Object.values(S.meetings).filter(Array.isArray).reduce(function(s,m){return s+m.length;},0);document.getElementById('totCnt').textContent='총 '+tot+'건';}
+function closeMov(id){document.getElementById(id).classList.remove('open');}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.style.display='none';},300);},3000);}
+
+// ==================== GOOGLE DRIVE ====================
+var GCI='647037514264-8l7n4imre6gg6slbm92isv138mo0cdiq.apps.googleusercontent.com';
+var GSC='https://www.googleapis.com/auth/drive.file';
+var GFN='세강스틸러스 미팅기록';var GDF='segang_data.json';
+var drTok=null,drRdy=false,drFid=null;
+function initDr(){if(!window.gapi){setDS('off');return;}gapi.load('client',function(){gapi.client.init({discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']}).then(function(){drRdy=true;var sv=localStorage.getItem('dr_tok');if(sv){var tc=google.accounts.oauth2.initTokenClient({client_id:GCI,scope:GSC,callback:function(r){if(r.error){setDS('off');return;}drTok=r;gapi.client.setToken(drTok);localStorage.setItem('dr_tok',JSON.stringify(drTok));setDS('on');loadDrData();}});tc.requestAccessToken({prompt:''});}else{setDS('off');}}).catch(function(){setDS('off');});});}
+function handleDriveAuth(){var s=document.getElementById('driveBtn').dataset.state;if(s==='on'){drSignOut();return;}if(!drRdy){alert('초기화 중입니다. 잠시 후 다시 시도해주세요.');return;}var tc=google.accounts.oauth2.initTokenClient({client_id:GCI,scope:GSC,callback:function(r){if(r.error){alert('Drive 연결 실패: '+r.error);return;}drTok=r;gapi.client.setToken(drTok);localStorage.setItem('dr_tok',JSON.stringify(drTok));setDS('on');loadDrData();toast('Drive 연결됐습니다!');}});tc.requestAccessToken({prompt:''});}
+function drSignOut(){if(!confirm('Drive 연결을 해제하시겠습니까?'))return;if(drTok)google.accounts.oauth2.revoke(drTok.access_token,function(){});drTok=null;drFid=null;gapi.client.setToken(null);localStorage.removeItem('dr_tok');setDS('off');}
+function setDS(s){var btn=document.getElementById('driveBtn');var ic=document.getElementById('dIco');var lb=document.getElementById('dLbl');btn.dataset.state=s;btn.className='dbtn';if(s==='on'){btn.classList.add('don');ic.textContent='V';lb.textContent='Drive 연결됨';}else if(s==='sync'){btn.classList.add('dsyn');ic.textContent='~';lb.textContent='동기화 중...';}else{btn.classList.add('doff');ic.textContent='o';lb.textContent='Drive 연결';}}
+function getOrCrF(){if(drFid)return Promise.resolve(drFid);return gapi.client.drive.files.list({q:"name='"+GFN+"' and mimeType='application/vnd.google-apps.folder' and trashed=false",fields:'files(id)'}).then(function(r){if(r.result.files.length){drFid=r.result.files[0].id;return drFid;}return gapi.client.drive.files.create({resource:{name:GFN,mimeType:'application/vnd.google-apps.folder'},fields:'id'}).then(function(cr){drFid=cr.result.id;return drFid;});});}
+function upFile(blob,meta,fid){return new Promise(function(res,rej){var rd=new FileReader();rd.onload=function(){var b64=rd.result.split(',')[1];var bd='-------segang';var body='\r\n--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify(meta||{})+'\r\n--'+bd+'\r\nContent-Type: application/json\r\nContent-Transfer-Encoding: base64\r\n\r\n'+b64+'\r\n--'+bd+'--';gapi.client.request({path:fid?'/upload/drive/v3/files/'+fid+'?uploadType=multipart':'/upload/drive/v3/files?uploadType=multipart',method:fid?'PATCH':'POST',headers:{'Content-Type':'multipart/related; boundary="'+bd+'"'},body:body}).then(res).catch(rej);};rd.onerror=rej;rd.readAsDataURL(blob);});}
+function saveDrData(){if(!drTok)return;getOrCrF().then(function(fid){var blob=new Blob([JSON.stringify(S)],{type:'application/json'});return gapi.client.drive.files.list({q:"name='"+GDF+"' and '"+fid+"' in parents and trashed=false",fields:'files(id)'}).then(function(r){if(r.result.files.length)return upFile(blob,{},r.result.files[0].id);return upFile(blob,{name:GDF,parents:[fid]},null);});}).catch(function(e){console.error('Dr save err',e);});}
+function loadDrData(){if(!drTok)return;getOrCrF().then(function(fid){return gapi.client.drive.files.list({q:"name='"+GDF+"' and '"+fid+"' in parents and trashed=false",fields:'files(id)'}).then(function(r){if(!r.result.files.length){saveDrData();return;}return gapi.client.drive.files.get({fileId:r.result.files[0].id,alt:'media'}).then(function(fr){var ld=typeof fr.result==='string'?JSON.parse(fr.result):fr.result;var lc=Object.values(S.meetings).filter(Array.isArray).reduce(function(s,m){return s+m.length;},0);var dc=Object.values(ld.meetings||{}).filter(Array.isArray).reduce(function(s,m){return s+m.length;},0);if(dc>=lc){Object.assign(S,ld);mig();localStorage.setItem('segang_v1',JSON.stringify(S));rSb();updCnt();rGDash();if(dc>0)toast('Drive에서 데이터 복원\n미팅 '+dc+'건');}});});}).catch(function(e){console.error('Dr load err',e);});}
+function syncMd(){if(!drTok){alert('Drive에 연결해주세요.');return;}var c=S.companies.find(function(x){return x.id===S.selCoId;});var sf=(c&&c.subfolders||[]).find(function(x){return x.id===S.selId;});setDS('sync');getOrCrF().then(function(fid){var nxt=sf?gapi.client.drive.files.list({q:"name='"+c.name+"' and mimeType='application/vnd.google-apps.folder' and '"+fid+"' in parents and trashed=false",fields:'files(id)'}).then(function(r){if(r.result.files.length)return r.result.files[0].id;return gapi.client.drive.files.create({resource:{name:c.name,mimeType:'application/vnd.google-apps.folder',parents:[fid]},fields:'id'}).then(function(cr){return cr.result.id;});}):Promise.resolve(fid);return nxt.then(function(tid){var fn=sf?c.name.replace(/\s/g,'_')+'_'+sf.name.replace(/\s/g,'_')+'_미팅기록.md':c.name.replace(/\s/g,'_')+'_미팅기록.md';var md=genMd();var blob=new Blob(['\uFEFF'+md],{type:'text/markdown;charset=utf-8'});return gapi.client.drive.files.list({q:"name='"+fn+"' and '"+tid+"' in parents and trashed=false",fields:'files(id)'}).then(function(r){if(r.result.files.length)return upFile(blob,{},r.result.files[0].id);return upFile(blob,{name:fn,parents:[tid]},null);}).then(function(){setDS('on');toast('Drive 저장 완료!\n'+fn);});});}).catch(function(e){setDS('on');alert('Drive 저장 실패: '+e.message);});}
+window.addEventListener('load',function(){initDr();});
+</script>
+</body>
+</html>
